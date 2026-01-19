@@ -1,0 +1,2056 @@
+{
+  "name": "01_ASX_Principal",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "asx-sdr",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -176,
+        -448
+      ],
+      "id": "78954d13-0eac-4d0e-b47c-7ab6d2aa5fec",
+      "name": "Webhook",
+      "webhookId": "4c1e9b1e-949c-4a10-8957-c25959053a52"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.messageType }}",
+                    "rightValue": "conversation",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "bb17157b-314d-47ad-abd2-7c4dfd8f22ff"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Texto"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "c9e60066-2805-44ca-9f4a-0279e020a010",
+                    "leftValue": "={{ $json.messageType }}",
+                    "rightValue": "imageMessage",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "image"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "de6d9048-93f6-4457-8cca-09084425328a",
+                    "leftValue": "={{ $json.messageType }}",
+                    "rightValue": "audioMessage",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "audio"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "f1f9670e-620d-424e-bf33-d1714e78eae5",
+                    "leftValue": "={{ $json.messageType }}",
+                    "rightValue": "documentMessage",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "file"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.3,
+      "position": [
+        832,
+        -480
+      ],
+      "id": "f174a63e-014c-401c-9253-5cfe97c34470",
+      "name": "Switch \"Message Type\""
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "6ffcf4d3-b051-4c05-b051-948db4bf9d13",
+              "leftValue": "={{ $json.messageType }}",
+              "rightValue": "audioMessage",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1344,
+        -800
+      ],
+      "id": "7aa98ff8-ad2c-45e0-977e-bcc9dc4ba6d1",
+      "name": "IF “Is Audio?”"
+    },
+    {
+      "parameters": {
+        "resource": "audio",
+        "operation": "transcribe",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 2,
+      "position": [
+        2000,
+        -832
+      ],
+      "id": "b90777f9-312c-4470-81cc-c39d39a4b80b",
+      "name": "Transcribe a recording",
+      "credentials": {
+        "openAiApi": {
+          "id": "Wu7eHpzdIX6EqTvS",
+          "name": "OpenAI-Audio"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "## LÓGICA TRANSCRIÇÃO DE AUDIO",
+        "height": 368,
+        "width": 1184
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        1328,
+        -368
+      ],
+      "typeVersion": 1,
+      "id": "ae096b55-a5d9-4acc-88d5-b7f3793a43aa",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "operation": "toBinary",
+        "sourceProperty": "base64",
+        "options": {
+          "fileName": "audio",
+          "mimeType": "audio/ogg"
+        }
+      },
+      "type": "n8n-nodes-base.convertToFile",
+      "typeVersion": 1.1,
+      "position": [
+        1744,
+        -720
+      ],
+      "id": "8c89c61c-cbc3-4b29-a230-ea1d009ae2c3",
+      "name": "Converte Base64 -> File Binario"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "3094226e-b96e-4d9b-b1eb-06474dff2b6b",
+              "name": "message",
+              "value": "={{ $json.text || $json.transcription || $json.data || '[cliente enviou áudio]' }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        2256,
+        -736
+      ],
+      "id": "72b277fc-1d88-487f-9afa-12ee1df8d1c5",
+      "name": "Set - Padroniza a Saída"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "70be13c9-12e4-4692-bf71-1d36d3105d91",
+              "name": "base64",
+              "value": "={{ $json.data?.message?.audioMessage?.base64 || $json.data?.message?.base64 || '' }}",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1584,
+        -832
+      ],
+      "id": "aa9d5040-969c-4e17-a0eb-c4c05e94d42a",
+      "name": "Set - Extrai Base64 do Audio"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "5ef55246-be05-4841-bf2f-0d1010879f0f",
+              "leftValue": "={{ $json.messageType }}",
+              "rightValue": "imageMessage",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1376,
+        -128
+      ],
+      "id": "ad335e60-97cd-4d41-a51c-2675e4b6cf9c",
+      "name": "IF “Image w/o Caption?”"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "5a011f42-18ca-490d-b59e-8531a6cb6f29",
+              "name": "imageUrl",
+              "value": "={{ $json.data?.message?.imageMessage?.url || '' }}",
+              "type": "string"
+            },
+            {
+              "id": "d1694e87-bd2e-4638-94aa-79a77f77492a",
+              "name": "imageBase64",
+              "value": "={{ $json.data?.message?.imageMessage?.base64 || $json.data?.message?.base64 || '' }}",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1568,
+        -304
+      ],
+      "id": "2f98981d-a0ce-46f3-bf4a-fa9c93abe21d",
+      "name": "Preparar Imagem para Vision"
+    },
+    {
+      "parameters": {
+        "resource": "image",
+        "operation": "analyze",
+        "modelId": {
+          "__rl": true,
+          "value": "gpt-4o-mini",
+          "mode": "list",
+          "cachedResultName": "GPT-4O-MINI"
+        },
+        "text": "Você recebe imagens enviadas por clientes via WhatsApp.\n\nA imagem pode ser:\n- um documento empresarial brasileiro (cartão CNPJ, contrato, proposta comercial, nota fiscal, boleto, etc.),\n- um documento pessoal (RG, CPF, CNH, etc.),\n- ou uma imagem genérica (carro, paisagem, selfie, etc.).\n\nSua tarefa é:\n1. Identificar o tipo da imagem.\n2. Se for um documento com dados de empresa, extrair os campos abaixo.\n3. Sempre responder em JSON estrito, sem texto fora do JSON, exatamente neste formato:\n\n{\n  \"tipo\": \"documento_cnpj\" | \"documento_empresa_outro\" | \"documento_pessoal\" | \"imagem_generica\",\n  \"descricao\": \"breve descrição em português da imagem\",\n  \"campos\": {\n    \"cnpj\": \"\",\n    \"razao_social\": \"\",\n    \"nome_fantasia\": \"\",\n    \"inscricao_estadual\": \"\",\n    \"endereco\": \"\",\n    \"cidade\": \"\",\n    \"uf\": \"\",\n    \"cep\": \"\",\n    \"telefone\": \"\"\n  }\n}\n\nSe algum campo não estiver visível, deixe-o como string vazia.\nSe não for documento empresarial, preencha \"campos\" com strings vazias e descreva a imagem em \"descricao\".",
+        "inputType": "base64",
+        "binaryPropertyName": "image",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 2,
+      "position": [
+        2048,
+        -176
+      ],
+      "id": "4cc2d1c2-466c-4273-b2bf-c2fa9da9e073",
+      "name": "Analyze Image",
+      "credentials": {
+        "openAiApi": {
+          "id": "2ikIpFWO8rUJ5zxy",
+          "name": "OpenAI-Image"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "toBinary",
+        "sourceProperty": "imageBase64",
+        "binaryPropertyName": "image",
+        "options": {
+          "fileName": "imagem"
+        }
+      },
+      "type": "n8n-nodes-base.convertToFile",
+      "typeVersion": 1.1,
+      "position": [
+        1776,
+        -352
+      ],
+      "id": "279c898e-b408-451c-92aa-ce42bc11bba3",
+      "name": "Convert Base64 -> File (Image)"
+    },
+    {
+      "parameters": {
+        "content": "## LÓGICA DE ANALISE E TRANSCRIÇÃO DE IMAGEM",
+        "height": 352,
+        "width": 1152
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        1328,
+        -912
+      ],
+      "typeVersion": 1,
+      "id": "c67eabe9-cd22-40ce-81fb-03c08e60456a",
+      "name": "Sticky Note1"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "a534305b-cb3b-4664-a4bf-5ef7dadb7032",
+              "name": "imageAnalysis",
+              "value": "={{ $json.content?.[0]?.text || '' }}",
+              "type": "string"
+            },
+            {
+              "id": "9c17a0f1-6050-45fd-9d95-b10cb5c23f52",
+              "name": "message",
+              "value": "={{ $json.content?.[0]?.text || '' }}",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        2304,
+        -176
+      ],
+      "id": "033b0f10-ced2-42ab-b792-434f2979e2bb",
+      "name": "Normalize Image Result"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "cf75343a-b953-4e06-9163-f2edd54926be",
+              "name": "message",
+              "value": "={{ $json.conversation || '' }}",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1104,
+        -464
+      ],
+      "id": "fc488db5-5588-45a3-a833-c0f5b01a9ae9",
+      "name": "Extract Text from Message"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT\n  l.id as lead_id,\n  l.qualified_at,\n  a.id as assignee_id,\n  a.name as vendedor_nome,\n  a.phone as vendedor_whatsapp,\n  asn.id as assignment_id\nFROM contacts c\nLEFT JOIN leads l ON l.contact_id = c.id\nLEFT JOIN assignments asn ON asn.lead_id = l.id\nLEFT JOIN agents a ON a.id = asn.assignee_id\nWHERE c.phone = '{{ $node[\"Merge Messages\"].json.phone }}'\n  AND l.qualified_at IS NOT NULL\nORDER BY l.qualified_at DESC\nLIMIT 1;",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        4384,
+        -672
+      ],
+      "id": "431555c3-686e-4b6c-b952-b6b97a7183f4",
+      "name": "Check Lead Exists",
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "JGKeXHuL7yJE7VmG",
+          "name": "Supabase ASX"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "d64885e3-d653-45e8-94a6-6bb44da3c725",
+              "leftValue": "={{ $json.lead_id }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        4704,
+        -672
+      ],
+      "id": "a127cfbb-6158-423f-8747-345faf2751dd",
+      "name": "Lead Already Qualified?"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://api.agenciaprospect.space/message/sendText/ASX_SDR",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "C56E986A1CCF-4D84-8BF0-9C8FEE1DB6BF"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "{\"number\": \"{{ $json.vendedor_whatsapp.replace('+', '') }}\", \"text\": \"\\ud83d\\udd14 *Lead Recorrente*\\n\\n{{ $node[\\\"Extract Text from Message\\\"].json.phone }} enviou nova mensagem.\\nContinue o atendimento no Chatwoot.\"}",
+        "options": {}
+      },
+      "id": "6baa262a-89b4-4414-bc71-26b9f237b91b",
+      "name": "Notify Assigned Vendor",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        5216,
+        -928
+      ]
+    },
+    {
+      "parameters": {
+        "description": "Adiciona labels/etiquetas ao contato no CRM.\nInput:\n- phone: telefone do contato (obrigatório)\n- labels: string com labels separadas por vírgula, ex: \"qualificado,morno\"\n\nExemplos: qualificado, desqualificado, quente, morno, frio",
+        "workflowId": {
+          "__rl": true,
+          "value": "QBZhzIYU7qBuE6p5",
+          "mode": "list"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "phone": "={{ $(\"Merge Messages\").item.json.phone }}",
+            "labels": "={{ $fromAI(\"labels\", \"Labels separadas por vírgula, ex: qualificado,morno\", \"string\") }}"
+          },
+          "schema": [
+            {
+              "id": "phone",
+              "displayName": "phone",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "labels",
+              "displayName": "labels",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        }
+      },
+      "id": "903cdfd4-778d-4abe-b44a-14e2f3239b00",
+      "name": "set_label",
+      "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
+      "typeVersion": 2.2,
+      "position": [
+        5312,
+        -176
+      ]
+    },
+    {
+      "parameters": {
+        "description": "Tool - score",
+        "workflowId": {
+          "__rl": true,
+          "value": "gPxoxxAA88LVdZ7Y",
+          "mode": "list"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "cnpj": "={{ $fromAI(\"cnpj\", \"CNPJ do lead (14 dígitos, só números). Se ainda não tiver CNPJ válido, não chame a ferramenta.\", \"string\") }}",
+            "perfil": "={{ $fromAI(\"perfil\", \"Perfil da empresa: 'revenda', 'oficina' ou 'representante'.\", \"string\") }}",
+            "uf_atuacao": "={{ $fromAI(\"uf_atuacao\", \"UF onde a empresa ATUA (Norte ou Nordeste).\", \"string\") }}",
+            "volume": "={{ $fromAI(\"volume\", \"Volume mensal aproximado de compra (em R$ ou texto com números).\", \"string\") }}"
+          },
+          "schema": [
+            {
+              "id": "cnpj",
+              "displayName": "cnpj",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "perfil",
+              "displayName": "perfil",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "uf_atuacao",
+              "displayName": "uf_atuacao",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "volume",
+              "displayName": "volume",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        }
+      },
+      "id": "737f252e-fed6-4a11-9bcf-db23578e82ce",
+      "name": "score_lead",
+      "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
+      "typeVersion": 2.2,
+      "position": [
+        5680,
+        -176
+      ]
+    },
+    {
+      "parameters": {
+        "description": "Finaliza a qualificação e transfere o lead para um vendedor.\nCHAMAR SOMENTE após score_lead retornar sucesso.\nInput: phone, nome, empresa, cnpj, perfil, uf_atuacao, volume, score, class, priority, ja_compra_asx, fornecedor_atual\nApós chamar: NÃO enviar mais mensagens ao cliente.",
+        "workflowId": {
+          "__rl": true,
+          "value": "OvvMcnq571vIb9bK",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/OvvMcnq571vIb9bK",
+          "cachedResultName": "03-Finalize-Handoff (callable)"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "phone": "={{ $(\"Merge Messages\").item.json.phone }}",
+            "nome": "={{ $fromAI(\"nome\", \"Nome do contato.\", \"string\") }}",
+            "empresa": "={{ $fromAI(\"empresa\", \"Nome da empresa.\", \"string\") }}",
+            "cnpj": "={{ $fromAI(\"cnpj\", \"CNPJ válido (14 dígitos).\", \"string\") }}",
+            "perfil": "={{ $fromAI(\"perfil\", \"Perfil: revenda, oficina ou representante.\", \"string\") }}",
+            "uf_atuacao": "={{ $fromAI(\"uf_atuacao\", \"UF onde a empresa atua.\", \"string\") }}",
+            "volume": "={{ $fromAI(\"volume\", \"Volume mensal de compra.\", \"string\") }}",
+            "score": "={{ $fromAI(\"score\", \"Score numérico (0-100) retornado por score_lead.\", \"number\") }}",
+            "class": "={{ $fromAI(\"class\", \"Classificação: quente, morno ou frio.\", \"string\") }}",
+            "priority": "={{ $fromAI(\"priority\", \"Prioridade: urgent, high ou medium.\", \"string\") }}",
+            "chatwoot_conversation_id": "={{ $(\"Merge Messages\").item.json.chatwootConversationId }}",
+            "ja_compra_asx": "={{ $fromAI(\"ja_compra_asx\", \"Se já compra produtos ASX: sim ou nao\", \"string\") }}",
+            "fornecedor_atual": "={{ $fromAI(\"fornecedor_atual\", \"Nome do distribuidor/fornecedor atual ou nenhum se não compra\", \"string\") }}"
+          },
+          "schema": [
+            {
+              "id": "phone",
+              "displayName": "phone",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "nome",
+              "displayName": "nome",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "empresa",
+              "displayName": "empresa",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "cnpj",
+              "displayName": "cnpj",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "perfil",
+              "displayName": "perfil",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "uf_atuacao",
+              "displayName": "uf_atuacao",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "volume",
+              "displayName": "volume",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "score",
+              "displayName": "score",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "number",
+              "removed": false
+            },
+            {
+              "id": "class",
+              "displayName": "class",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "priority",
+              "displayName": "priority",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "chatwoot_conversation_id",
+              "displayName": "chatwoot_conversation_id",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "number",
+              "removed": false
+            },
+            {
+              "id": "ja_compra_asx",
+              "displayName": "ja_compra_asx",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "fornecedor_atual",
+              "displayName": "fornecedor_atual",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        }
+      },
+      "id": "b57b640f-3872-48c6-96d6-1875124a4994",
+      "name": "finalize",
+      "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
+      "typeVersion": 2.2,
+      "position": [
+        5840,
+        -176
+      ]
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $('Merge Messages').item.json.txt }}",
+        "options": {
+          "systemMessage": "=<context>\nTelefone do cliente: {{ $(\"Merge Messages\").item.json.phone }}\n</context>\n\n<role>\nVocê é João, SDR da ASX Iluminação. Qualifica leads B2B pelo WhatsApp.\n</role>\n\n<criterios_qualificacao>\nLead QUALIFICADO = TODOS os critérios:\n1. CNPJ válido (14 dígitos)\n2. Atua no Norte ou Nordeste (AC, AM, AP, PA, RO, RR, TO, AL, BA, CE, MA, PB, PE, PI, RN, SE)\n3. Volume >= R$ 4.000/mês\n\nQualquer critério falho = DESQUALIFICADO.\n</criterios_qualificacao>\n\n<ordem_coleta>\nUma pergunta por vez:\n1. Nome da pessoa\n2. Nome da empresa e o cargo da pessoa na empresa\n3. CNPJ → chamar company_enrich IMEDIATAMENTE\n4. Perfil (revenda/lojista/representante)\n5. UF de atuação\n6. Volume mensal (R$)\n7. Já compra produtos ASX? Se sim, de qual distribuidor/fornecedor?\n</ordem_coleta>\n\n<fluxo_OBRIGATORIO>\nSIGA EXATAMENTE ESTA ORDEM:\n\nETAPA 1 - COLETA:\n- Coletar nome, empresa, CNPJ\n- Chamar company_enrich\n- Se CNPJ inválido: pedir correção (máx 3x)\n- Continuar: perfil, UF, volume\n\nETAPA 2 - AVALIAÇÃO:\n- Você avalia: CNPJ ok? UF no N/NE? Volume >= 4000?\n- DESQUALIFICADO: agradecer, encerrar (NÃO chamar score_lead nem finalize)\n\nETAPA 3 - QUALIFICADO (ORDEM CRÍTICA):\n1. PRIMEIRO: Chamar score_lead\n2. SEGUNDO: Chamar finalize (COM os dados do score_lead)\n3. TERCEIRO: Avisar o cliente que especialista vai assumir\n4. QUARTO: NÃO RESPONDER MAIS (mesmo se cliente mandar mensagem)\n\n⚠️ CRÍTICO: Você DEVE chamar finalize ANTES de avisar o cliente. Se avisar antes de chamar finalize, o handoff não acontece.\n</fluxo_OBRIGATORIO>\n\n<tools>\n1. company_enrich\n   Input: { \"cnpj\": \"12345678000199\" } (aceita qualquer formato: com ou sem pontos/barras)\n   Output: { cnpj, razao_social, nome_fantasia, cnae, city, state, valid }\n   Se valid=false ou erro: pedir correção do CNPJ\n\n2. score_lead\n   Input: { cnpj, perfil, uf_atuacao, volume }\n   Output: { qualified, score, class, priority }\n   QUANDO: Após confirmar qualificado\n\n3. finalize\n   Input: { phone, nome, empresa, cnpj, perfil, uf_atuacao, volume, score, class, priority, ja_compra_asx, fornecedor_atual }\n   - ja_compra_asx: \"sim\" ou \"nao\"\n   - fornecedor_atual: nome do distribuidor/fornecedor (ou \"nenhum\" se não compra)\n   QUANDO: IMEDIATAMENTE após score_lead\n   ⚠️ Chamar ANTES de avisar o cliente\n\n4. set_label\n   Input: { \"phone\": \"...\", \"labels\": [\"qualificado\", \"morno\", \"ja_compra_asx\"] }\n   Labels disponíveis para compra ASX:\n   - \"ja_compra_asx\" - Lead já compra produtos ASX de algum distribuidor\n   - \"novo_cliente_asx\" - Lead ainda não compra produtos ASX\n\n5. log_agent_event\n   Input: { phone, event_type, data }\n</tools>\n\n<fallbacks>\nCNPJ inválido:\n1ª: \"Não encontrei esse CNPJ na Receita. Pode conferir se está correto?\"\n2ª: \"Ainda não consegui validar. Confirme o CNPJ, por favor.\"\n3ª: Encerrar: \"Não consegui validar o CNPJ. Quando tiver o número correto, me chame!\"\n\nIMPORTANTE: O cliente pode enviar o CNPJ em qualquer formato (com ou sem pontos, barras, traços).\nO sistema limpa automaticamente. NÃO peça para enviar só números.\n\nVolume < R$4k:\n\"Nosso atendimento é para compras a partir de R$4.000/mês.\"\n\nFora N/NE:\n\"No momento atendemos apenas Norte e Nordeste.\"\n\nSem CNPJ (B2C):\n\"Atendemos apenas empresas com CNPJ.\"\n</fallbacks>\n\n<restricoes>\n- NÃO inventar dados\n- NÃO prometer descontos\n- NÃO mencionar: score, label, tool, API\n- NÃO enviar mensagens após chamar finalize\n- NÃO avisar cliente ANTES de chamar finalize\n- NÃO chamar finalize se desqualificado\n- NÃO fazer mais de 3 tentativas para CNPJ\n- Frases curtas, uma pergunta por vez\n</restricoes>\n\n<exemplo_qualificado>\n[Após coletar todos os dados e verificar que está qualificado]\n→ Chamar score_lead({ cnpj, perfil, uf_atuacao, volume })\n→ Receber { score: 70, class: \"morno\", priority: \"high\" }\n→ Chamar finalize({ phone, nome, empresa, cnpj, perfil, uf_atuacao, volume, score: 70, class: \"morno\", priority: \"high\", ja_compra_asx: \"sim\", fornecedor_atual: \"Distribuidora XYZ\" })\n→ Chamar set_label({ phone, labels: [\"qualificado\", \"morno\", \"ja_compra_asx\"] }) (ou \"novo_cliente_asx\" se não compra)\n→ Só DEPOIS de finalize retornar sucesso: \"Ótimo! Vou te passar para um especialista. Ele vai falar com você em breve!\"\n→ Se cliente responder qualquer coisa: NÃO RESPONDER (o vendedor assume)\n</exemplo_qualificado>\n\n<pergunta_compra_asx>\nApós coletar o volume, pergunte:\n\"Você já compra produtos ASX de algum distribuidor ou fornecedor?\"\n\nSe SIM: \"Qual o nome do distribuidor/fornecedor?\"\nSe NÃO: Apenas registre ja_compra_asx=\"nao\" e fornecedor_atual=\"nenhum\"\n\nIMPORTANTE: Essa informação NÃO afeta a qualificação. É apenas para informar o vendedor.\n</pergunta_compra_asx>",
+          "returnIntermediateSteps": false
+        }
+      },
+      "id": "6d88e7c0-a9b5-49fd-aebb-522de7f05685",
+      "name": "João - AI Agent",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1.7,
+      "position": [
+        5392,
+        -544
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "messages",
+              "name": "messages",
+              "value": "={{ ($node['João - AI Agent'].json.output || '').split('\\n\\n').filter(part => part.trim().length) }}",
+              "type": "json"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "8d75ca8e-3478-4b01-9175-4a1c37958150",
+      "name": "Format AI Agent Output",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        6208,
+        -848
+      ]
+    },
+    {
+      "parameters": {
+        "fieldToSplitOut": "messages",
+        "options": {}
+      },
+      "id": "9a93f793-5aaa-4965-8c25-112fe30d3aee",
+      "name": "Split Long Messages",
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [
+        6432,
+        -848
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.agenciaprospect.space/message/sendText/ASX_SDR",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "C56E986A1CCF-4D84-8BF0-9C8FEE1DB6BF"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "number",
+              "value": "={{ $('Webhook').item.json.body.data.key.remoteJid.replaceAll(\"@s.whatsapp.net\",\"\") }}"
+            },
+            {
+              "name": "text",
+              "value": "={{ $('Loop Over Items').item.json.messages }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "27e0de82-1927-4def-9c5b-d542b229f7f6",
+      "name": "Send WhatsApp Message",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        7344,
+        -448
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "push",
+        "list": "={{ $node[\"Prepare Message for Redis\"].json.phone }}",
+        "messageData": "={{ $node[\"Prepare Message for Redis\"].json.message }}",
+        "tail": true
+      },
+      "id": "a3476c60-adda-4fc0-b317-d83105c34a59",
+      "name": "Redis Push Message",
+      "type": "n8n-nodes-base.redis",
+      "typeVersion": 1,
+      "position": [
+        2800,
+        -512
+      ],
+      "credentials": {
+        "redis": {
+          "id": "0VyIRdMVQBaiqjXS",
+          "name": "Redis ASX"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "amount": 15
+      },
+      "id": "ed7cd2c4-a854-4747-8733-392788992d5e",
+      "name": "Wait 15s",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        3008,
+        -512
+      ],
+      "webhookId": "07f3fe49-495e-4aa8-abca-497839c739a0"
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "propertyName": "message",
+        "key": "={{ $node[\"Prepare Message for Redis\"].json.phone }}",
+        "options": {}
+      },
+      "id": "0cdf3f15-0005-41ab-9412-ce226c1a8b30",
+      "name": "Redis Get Messages",
+      "type": "n8n-nodes-base.redis",
+      "typeVersion": 1,
+      "position": [
+        3200,
+        -512
+      ],
+      "credentials": {
+        "redis": {
+          "id": "0VyIRdMVQBaiqjXS",
+          "name": "Redis ASX"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "txt",
+              "name": "txt",
+              "value": "={{ Array.isArray($json.message) ? $json.message.join('\\n') : ($json.message || '') }}",
+              "type": "string"
+            },
+            {
+              "id": "phone",
+              "name": "phone",
+              "value": "={{ $node['Prepare Message for Redis'].json.phone }}",
+              "type": "string"
+            },
+            {
+              "id": "chatwootConversationId",
+              "name": "chatwootConversationId",
+              "value": "={{ $node['Prepare Message for Redis'].json.chatwootConversationId }}",
+              "type": "number"
+            },
+            {
+              "id": "chatwootInboxId",
+              "name": "chatwootInboxId",
+              "value": "={{ $node['Prepare Message for Redis'].json.chatwootInboxId }}",
+              "type": "number"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "007279c0-bd1b-4bd4-beac-e31f84bd3a46",
+      "name": "Merge Messages",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        3712,
+        -528
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "delete",
+        "key": "={{ $node['Merge Messages'].json.phone || $node['Extract Text from Message'].json.phone }}"
+      },
+      "id": "47ad2d1c-b5f8-428a-9ccd-43986a21fdca",
+      "name": "Redis Delete Key",
+      "type": "n8n-nodes-base.redis",
+      "typeVersion": 1,
+      "position": [
+        4128,
+        -528
+      ],
+      "credentials": {
+        "redis": {
+          "id": "0VyIRdMVQBaiqjXS",
+          "name": "Redis ASX"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-4.1-mini",
+          "mode": "list",
+          "cachedResultName": "gpt-4.1-mini"
+        },
+        "responsesApiEnabled": false,
+        "options": {
+          "temperature": 0.3
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [
+        4960,
+        -176
+      ],
+      "id": "c8080ff7-56f5-44ff-a4a8-ef322ab1e1f8",
+      "name": "OpenAI Chat Model",
+      "credentials": {
+        "openAiApi": {
+          "id": "MTIXNlIoh0To4OIy",
+          "name": "OpenAI GPT-4"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "### Campo usado para definir variáveis.",
+        "height": 224
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        96,
+        -512
+      ],
+      "typeVersion": 1,
+      "id": "4c106356-e367-48fa-ab73-2447d47f3a50",
+      "name": "Sticky Note2"
+    },
+    {
+      "parameters": {
+        "content": "### Normalizar as informações - evolution envia numero do wpp sujo\n",
+        "height": 224,
+        "width": 256
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        416,
+        -512
+      ],
+      "typeVersion": 1,
+      "id": "58026b0a-a804-45be-854f-620fd23adde3",
+      "name": "Sticky Note3"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "116755d4-fc1c-4fbd-bbec-40933d8876b2",
+              "name": "phone",
+              "value": "={{ $json[\"phone\"].split('@')[0] }}",
+              "type": "string"
+            },
+            {
+              "id": "8347533c-1071-4ea1-8bd0-51640e5aaca7",
+              "name": "messageType",
+              "value": "={{ $json.messageType }}",
+              "type": "string"
+            },
+            {
+              "id": "bc5c81df-23f9-4b7f-9af8-ab7a88d3b493",
+              "name": "timestamp",
+              "value": "={{   new Date($json[\"timestamp\"] * 1000)     .toLocaleString(\"pt-BR\", { timeZone: \"America/Sao_Paulo\" }) }}",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        512,
+        -448
+      ],
+      "id": "8888b91d-6441-40e1-ab62-8c8158b9b61d",
+      "name": "Normaliza Payload"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "b8909038-94d3-4bb1-90d9-c19601c7aaa2",
+              "name": "instance",
+              "value": "={{ $json.body.instance }}",
+              "type": "string"
+            },
+            {
+              "id": "43a1a63e-23d6-4ceb-a64d-f8fa405a9a33",
+              "name": "phone",
+              "value": "={{ $json.body.data.key.remoteJid }}",
+              "type": "string"
+            },
+            {
+              "id": "fc12c263-9e24-4a8c-8df8-383e0332963e",
+              "name": "id",
+              "value": "={{ $json.body.data.key.id }}",
+              "type": "string"
+            },
+            {
+              "id": "40322cae-e4a4-4537-ba67-fd7ac93648b2",
+              "name": "fromMe",
+              "value": "={{ $json.body.data.key.fromMe }}",
+              "type": "boolean"
+            },
+            {
+              "id": "fa2cacc2-4d06-4be8-b043-4245549f1020",
+              "name": "conversation",
+              "value": "={{$json.body.data.message.conversation || $json.body.data.message.extendedTextMessage.text}}",
+              "type": "string"
+            },
+            {
+              "id": "7a82a36f-f692-4e45-a9c2-a1e52ada4997",
+              "name": "messageType",
+              "value": "={{ $json.body.data.messageType }}",
+              "type": "string"
+            },
+            {
+              "id": "a2fc2b9d-2d58-4405-9c2f-75f165ae0c3f",
+              "name": "apikey",
+              "value": "={{ $json.body.apikey }}",
+              "type": "string"
+            },
+            {
+              "id": "ea3d9ac2-e087-4cd6-8ba7-df42cb3d0d88",
+              "name": "server_url",
+              "value": "={{ $json.body.server_url }}",
+              "type": "string"
+            },
+            {
+              "id": "7256eb37-f80a-4f4b-a2a7-a44be5ed1af0",
+              "name": "chatwootInboxId",
+              "value": "={{ $json.body.data.chatwootInboxId }}",
+              "type": "number"
+            },
+            {
+              "id": "69c0d7e2-69cb-4d0f-a67d-976d2ee0fbbb",
+              "name": "chatwootConversationId",
+              "value": "={{ $json.body.data.chatwootConversationId }}",
+              "type": "number"
+            },
+            {
+              "id": "fcdf79ea-f1e7-44fe-ae6a-879f6777e6e7",
+              "name": "chatwootMessageId",
+              "value": "={{ $json.body.data.chatwootMessageId }}",
+              "type": "number"
+            },
+            {
+              "id": "b8ef431c-ae07-4a72-9dbb-fbf607f48128",
+              "name": "timestamp",
+              "value": "={{ $json[\"body\"][\"data\"][\"messageTimestamp\"] }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        160,
+        -448
+      ],
+      "id": "859c6b6c-8046-4948-8878-933712a9a798",
+      "name": "Extrair Campos (payload)"
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "={{ $('Normaliza Payload').item.json.phone }}",
+        "contextWindowLength": 25
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryPostgresChat",
+      "typeVersion": 1.3,
+      "position": [
+        5136,
+        -192
+      ],
+      "id": "48706638-1a51-4a6a-9d26-d18f58c5fed3",
+      "name": "Postgres Chat Memory",
+      "credentials": {
+        "postgres": {
+          "id": "JGKeXHuL7yJE7VmG",
+          "name": "Supabase ASX"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "description": "Registra eventos para auditoria/BI.\nEventos: score_calculated, lead_finalized, lead_rejected\nInput: phone, event_type, data (JSON com detalhes)",
+        "workflowId": {
+          "__rl": true,
+          "value": "N1b1o3ED1FXDHWBW",
+          "mode": "list"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "phone": "={{ $(\"Merge Messages\").item.json.phone }}",
+            "event_type": "={{ $fromAI(\"event_type\", \"Tipo: score_calculated, lead_finalized, lead_rejected.\", \"string\") }}",
+            "data": "={{ $fromAI(\"data\", \"JSON com detalhes do evento.\", \"string\") }}"
+          },
+          "schema": [
+            {
+              "id": "phone",
+              "displayName": "phone",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "event_type",
+              "displayName": "event_type",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "data",
+              "displayName": "data",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        }
+      },
+      "id": "tool-agent-log",
+      "name": "log_agent_event",
+      "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
+      "typeVersion": 2.2,
+      "position": [
+        5984,
+        -176
+      ]
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        6688,
+        -464
+      ],
+      "id": "a4fcb28b-6752-4063-8eeb-ebbc1c8cc487",
+      "name": "Loop Over Items"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "=INSERT INTO ia_messages (phone, direction, content, session_id, meta)\nVALUES (\n  '{{ $json.phone }}',\n  'user',\n  '{{ ($json.txt || \"\").replace(\"'\", \"''\") }}',\n  '{{ $json.phone }}',\n  NULL\n);",
+        "options": {}
+      },
+      "id": "log-user-ia-message",
+      "name": "Log User IA Message",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        3920,
+        -384
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "JGKeXHuL7yJE7VmG",
+          "name": "Supabase ASX"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "=INSERT INTO ia_messages (phone, direction, content, session_id, meta)\nVALUES (\n  '{{ $node[\"Normaliza Payload\"].json.phone }}',\n  'assistant',\n  '{{ ($json.output || \"\").replace(\"'\", \"''\") }}',\n  '{{ $node[\"Normaliza Payload\"].json.phone }}',\n  NULL\n);",
+        "options": {}
+      },
+      "id": "log-assistant-ia-message",
+      "name": "Log Assistant IA Message",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        5968,
+        -848
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "JGKeXHuL7yJE7VmG",
+          "name": "Supabase ASX"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "=INSERT INTO contacts (phone)\nVALUES ('{{ $json.phone }}')\nON CONFLICT (phone) DO NOTHING;",
+        "options": {}
+      },
+      "id": "upsert-contact-initial",
+      "name": "Upsert Contact (First Touch)",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        832,
+        -112
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "JGKeXHuL7yJE7VmG",
+          "name": "Supabase ASX"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "amount": 2
+      },
+      "id": "35c28a58-483e-489b-928f-ea8da86c0c79",
+      "name": "Wait 2s",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        7648,
+        -320
+      ],
+      "webhookId": "e5594fba-8a29-4b24-90e0-9a87564e67a9"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "if-has-merged-text-cond",
+              "leftValue": "={{ $json.message.last() }}",
+              "rightValue": "={{ $node[\"Prepare Message for Redis\"].json.message }}",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        3408,
+        -512
+      ],
+      "id": "if-has-merged-text",
+      "name": "IF Has Merged Text"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "phone",
+              "name": "phone",
+              "value": "={{ $node[\"Normaliza Payload\"].json.phone }}",
+              "type": "string"
+            },
+            {
+              "id": "message",
+              "name": "message",
+              "value": "={{ $json.txt || $json.conversation || '' }}",
+              "type": "string"
+            },
+            {
+              "id": "chatwootConversationId",
+              "name": "chatwootConversationId",
+              "value": "={{ $json.chatwootConversationId }}",
+              "type": "number"
+            },
+            {
+              "id": "chatwootInboxId",
+              "name": "chatwootInboxId",
+              "value": "={{ $json.chatwootInboxId }}",
+              "type": "number"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        2576,
+        -512
+      ],
+      "id": "prepare-message-for-redis",
+      "name": "Prepare Message for Redis"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        3600,
+        -256
+      ],
+      "id": "ee288025-1026-4adb-810b-8443ad8b91f4",
+      "name": "No Operation, do nothing"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.agenciaprospect.space/chat/sendPresence/ASX_SDR",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "C56E986A1CCF-4D84-8BF0-9C8FEE1DB6BF"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"presence\": \"composing\",\n  \"delay\": 2000,\n  \"number\": \"{{ $node['Webhook'].json['body']['data']['key']['remoteJidAlt'] || $node['Webhook'].json['body']['data']['key']['remoteJid'] }}\" \n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        7040,
+        -448
+      ],
+      "id": "7a40a5e3-6fdd-4060-a552-b27af7223452",
+      "name": "Presence composing"
+    },
+    {
+      "parameters": {
+        "description": "Enriquece dados da empresa usando CNPJ. Chame assim que tiver um CNPJ válido (14 dígitos) para obter razão social, nome fantasia, cidade, estado e CNAE da empresa.",
+        "workflowId": {
+          "__rl": true,
+          "value": "fRc8nB8qUjJUrTHw",
+          "mode": "list"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "cnpj": "={{ $fromAI(\"cnpj\", \"CNPJ do lead (14 dígitos, só números). Obrigatório.\", \"string\") }}"
+          },
+          "schema": [
+            {
+              "id": "cnpj",
+              "displayName": "cnpj",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        }
+      },
+      "id": "tool-company-enrich",
+      "name": "company_enrich",
+      "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
+      "typeVersion": 2.2,
+      "position": [
+        5488,
+        -176
+      ]
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Extrair Campos (payload)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch \"Message Type\"": {
+      "main": [
+        [
+          {
+            "node": "Extract Text from Message",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Extract Text from Message",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Extract Text from Message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF “Is Audio?”": {
+      "main": [
+        [
+          {
+            "node": "Set - Extrai Base64 do Audio",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "IF “Image w/o Caption?”",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Transcribe a recording": {
+      "main": [
+        [
+          {
+            "node": "Set - Padroniza a Saída",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Converte Base64 -> File Binario": {
+      "main": [
+        [
+          {
+            "node": "Transcribe a recording",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set - Extrai Base64 do Audio": {
+      "main": [
+        [
+          {
+            "node": "Converte Base64 -> File Binario",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF “Image w/o Caption?”": {
+      "main": [
+        [
+          {
+            "node": "Preparar Imagem para Vision",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Prepare Message for Redis",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Preparar Imagem para Vision": {
+      "main": [
+        [
+          {
+            "node": "Convert Base64 -> File (Image)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Convert Base64 -> File (Image)": {
+      "main": [
+        [
+          {
+            "node": "Analyze Image",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Analyze Image": {
+      "main": [
+        [
+          {
+            "node": "Normalize Image Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract Text from Message": {
+      "main": [
+        [
+          {
+            "node": "IF “Is Audio?”",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Normalize Image Result": {
+      "main": [
+        [
+          {
+            "node": "Prepare Message for Redis",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set - Padroniza a Saída": {
+      "main": [
+        [
+          {
+            "node": "Prepare Message for Redis",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Lead Exists": {
+      "main": [
+        [
+          {
+            "node": "Lead Already Qualified?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Lead Already Qualified?": {
+      "main": [
+        [
+          {
+            "node": "Notify Assigned Vendor",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "João - AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "João - AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Log Assistant IA Message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format AI Agent Output": {
+      "main": [
+        [
+          {
+            "node": "Split Long Messages",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        []
+      ]
+    },
+    "Split Long Messages": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send WhatsApp Message": {
+      "main": [
+        [
+          {
+            "node": "Wait 2s",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Redis Push Message": {
+      "main": [
+        [
+          {
+            "node": "Wait 15s",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait 15s": {
+      "main": [
+        [
+          {
+            "node": "Redis Get Messages",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Redis Get Messages": {
+      "main": [
+        [
+          {
+            "node": "IF Has Merged Text",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge Messages": {
+      "main": [
+        [
+          {
+            "node": "Log User IA Message",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Redis Delete Key",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Redis Delete Key": {
+      "main": [
+        [
+          {
+            "node": "Check Lead Exists",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "João - AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extrair Campos (payload)": {
+      "main": [
+        [
+          {
+            "node": "Normaliza Payload",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Normaliza Payload": {
+      "main": [
+        [
+          {
+            "node": "Switch \"Message Type\"",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Upsert Contact (First Touch)",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        []
+      ]
+    },
+    "Postgres Chat Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "João - AI Agent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Over Items": {
+      "main": [
+        [],
+        [
+          {
+            "node": "Presence composing",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Log User IA Message": {
+      "main": [
+        [
+          {
+            "node": "Redis Delete Key",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Log Assistant IA Message": {
+      "main": [
+        [
+          {
+            "node": "Format AI Agent Output",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait 2s": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF Has Merged Text": {
+      "main": [
+        [
+          {
+            "node": "Merge Messages",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "No Operation, do nothing",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Message for Redis": {
+      "main": [
+        [
+          {
+            "node": "Redis Push Message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Presence composing": {
+      "main": [
+        [
+          {
+            "node": "Send WhatsApp Message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "company_enrich": {
+      "ai_tool": [
+        [
+          {
+            "node": "João - AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "score_lead": {
+      "ai_tool": [
+        [
+          {
+            "node": "João - AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "finalize": {
+      "ai_tool": [
+        [
+          {
+            "node": "João - AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "set_label": {
+      "ai_tool": [
+        [
+          {
+            "node": "João - AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "log_agent_event": {
+      "ai_tool": [
+        [
+          {
+            "node": "João - AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "callerPolicy": "workflowsFromSameOwner",
+    "availableInMCP": false,
+    "timeSavedMode": "fixed",
+    "errorWorkflow": "WBqj1UKzZORCANPo"
+  },
+  "versionId": "6e78187d-0fdf-4ee6-8880-4bc3a2aacc38",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "fb9317012284aa1a397c69541492ceb6ec5692041aefd8a1573dcad18efc2be7"
+  },
+  "id": "hbHk0X8DY2HHMoTZ",
+  "tags": []
+}
