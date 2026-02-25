@@ -38,7 +38,7 @@
 
 Obs: Uma ação paralela será registrar em uma tabela de dados essa recomendação. Planilhar o nome do Lead, informacoes da Empresa (cnpj e etc..), telefone de contato e a(s) distribuidora(s) que foi indicada.
 
-4.3 Leads Qualificados (**compram acima de 4000, tem CNPJ válido e atua na região Norte/Nordeste**)
+4.3 Leads Qualificados (**compram acima de 4000, tem CNPJ válido e atua na região Norte/Nordeste** - se for fora da região, indicar distribuidores parceiros)
 
 Aqui o Agente de IA entrará em contato para confirmar os Dados e o Interesse do Lead, para qualifica-lo como potencial cliente. Além de confirmar volume que esse Lead compra, vamos adicionar duas novas perguntas para que de fato ele seja um candidato à comprar direto da fabrica (ASX).
   
