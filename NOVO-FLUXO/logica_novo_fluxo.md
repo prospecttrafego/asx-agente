@@ -290,6 +290,7 @@ João confirma que tem os dados do formulário e pergunta se está tudo certo.
 #### Desqualificação por Política
 
 Quando o lead já compra ASX de alguém na região e tem volume ≤ R$10k:
+
 - João explica educadamente que deve continuar com o fornecedor atual
 - Registra o nome do fornecedor
 - Aplica labels: `desqualificado_politica`, `ja_compra_asx`
@@ -299,6 +300,7 @@ Quando o lead já compra ASX de alguém na região e tem volume ≤ R$10k:
 #### Exceção (Volume Alto)
 
 Se o lead já compra ASX mas o volume é > R$10k:
+
 - Registra o fornecedor atual
 - Aplica label: `excecao_volume_alto`
 - Continua para Etapa 3
@@ -410,11 +412,13 @@ Leads qualificados (Path 3) que chegam ao handoff recebem uma pontuação:
 **Quando:** Automaticamente no fluxo outbound (workflow 06), antes de classificar
 
 **O que faz:**
+
 - Valida se o CNPJ existe na Receita Federal
 - Busca: razão social, nome fantasia, CNAE, cidade, estado
 - Salva os dados na tabela fb_leads
 
 **Resultados:**
+
 - CNPJ válido → continua classificação
 - CNPJ inválido → Path 1 (registra e ignora)
 
@@ -423,6 +427,7 @@ Leads qualificados (Path 3) que chegam ao handoff recebem uma pontuação:
 **Quando:** No outbound (Path 2) e quando o agente Path 2 precisa de mais opções
 
 **O que faz:**
+
 - Busca até 3 distribuidores parceiros no estado do lead
 - Prioriza: mesma cidade > tipo "Distribuidor" > tipo "Lojista"
 - Se não encontrar nenhum: retorna mensagem genérica
@@ -434,6 +439,7 @@ Leads qualificados (Path 3) que chegam ao handoff recebem uma pontuação:
 **Quando:** No Path 3, após confirmar que o lead será transferido
 
 **O que faz:**
+
 - Calcula score numérico (0-100)
 - Classifica: quente/morno/frio
 - Define prioridade: urgent/high/medium
@@ -445,6 +451,7 @@ Leads qualificados (Path 3) que chegam ao handoff recebem uma pontuação:
 **Quando:** IMEDIATAMENTE após score_lead, no Path 3
 
 **O que faz:**
+
 - Registra o lead na tabela `leads` (com source = "facebook_form")
 - Escolhe o vendedor com menos leads atribuídos
 - Move a conversa para inbox do vendedor no Chatwoot
@@ -460,6 +467,7 @@ Leads qualificados (Path 3) que chegam ao handoff recebem uma pontuação:
 **Quando:** Para marcar o status e path do lead
 
 **Labels do novo fluxo:**
+
 - `fb_lead` - Lead originado do formulário Facebook
 - `path_distributor` - Path 2: redirecionado para distribuidor
 - `path_qualified` - Path 3: qualificado para handoff
@@ -475,6 +483,7 @@ Leads qualificados (Path 3) que chegam ao handoff recebem uma pontuação:
 **Quando:** Para auditoria de decisões importantes
 
 **Eventos registrados:**
+
 - `score_calculated` - Score calculado
 - `lead_finalized` - Lead transferido
 - `desqualificado_politica` - Lead desqualificado por já comprar ASX
