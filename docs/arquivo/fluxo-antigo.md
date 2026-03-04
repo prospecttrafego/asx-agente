@@ -1,4 +1,9 @@
-# ASX SDR - Lógica do Fluxo
+> **OBSOLETO** — Este documento descreve o fluxo anterior (reativo, onde o lead iniciava contato via WhatsApp).
+> O fluxo ativo e em produção está em [`docs/logica-do-fluxo.md`](../logica-do-fluxo.md).
+
+---
+
+# ASX SDR - Lógica do Fluxo (Antigo)
 
 > Este documento descreve a lógica do sistema do ponto de vista do usuário e do negócio: como o João (agente IA) se comporta, quais decisões toma, e como os leads são qualificados e transferidos.
 

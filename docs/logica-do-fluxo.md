@@ -176,10 +176,12 @@ Este workflow é acionado automaticamente quando um lead preenche o formulário 
 
 7. Classificar Lead (Path 1, 2 ou 3)
 
-8. Switch por Path:
+8. IF Node por Path (decisão binária: path=3 → True, senão → False):
+   - Nota: Usa IF node v2 em vez de Switch. O Switch node v3.x do n8n tem bug conhecido
+     que roteia sempre para o Output 0 quando "Always Output Data" está ativo.
    ├── Path 1 → Atualizar status → FIM
-   ├── Path 2 → Buscar distribuidores → Criar contato Chatwoot → Enviar WhatsApp com lista → FIM
-   └── Path 3 → Criar contato Chatwoot → Enviar WhatsApp de apresentação → FIM
+   ├── Path 2 (False) → Buscar distribuidores → Criar contato Chatwoot → Enviar WhatsApp com lista → FIM
+   └── Path 3 (True) → Criar contato Chatwoot → Enviar WhatsApp de apresentação → FIM
 ```
 
 ### 4.2 1ª Mensagem - Path 2 (Distribuidor)
@@ -453,7 +455,7 @@ Leads qualificados (Path 3) que chegam ao handoff recebem uma pontuação:
 **O que faz:**
 
 - Registra o lead na tabela `leads` (com source = "facebook_form")
-- Escolhe o vendedor com menos leads atribuídos
+- Escolhe o vendedor com menos leads atribuídos (round-robin)
 - Move a conversa para inbox do vendedor no Chatwoot
 - Envia notificação WhatsApp ao vendedor com dados extras:
   - Já compra ASX na região?
@@ -461,6 +463,26 @@ Leads qualificados (Path 3) que chegam ao handoff recebem uma pontuação:
   - NFs enviadas ou empresa nova
 
 **CRÍTICO:** Deve ser chamado ANTES de avisar o cliente sobre a transferência
+
+**Parâmetros do tool (simplificado):**
+
+O tool recebe 16 parâmetros, mas apenas 7 são fornecidos pelo agente via `$fromAI()`.
+Os outros 9 são pré-preenchidos automaticamente do contexto do fluxo:
+
+| Parâmetro | Origem |
+|-----------|--------|
+| phone, nome, empresa, cnpj, perfil, uf_atuacao, volume | `Lookup Lead Path` (dados do fb_leads) |
+| chatwoot_conversation_id | `Merge Messages` (ID da conversa) |
+| source | Fixo: `facebook_form` |
+
+Parâmetros que o agente fornece (coletados na conversa + resultado do score_lead):
+- `score`, `class`, `priority` — Resultado do score_lead
+- `ja_compra_asx_regiao` — sim ou nao
+- `fornecedor_asx_regiao` — Nome do fornecedor ASX ou N/A
+- `nfs_enviadas` — true ou false
+- `empresa_recente` — true ou false
+
+> Nota: Reduzido de 13 para 7 `$fromAI()` porque LLMs tendem a pular tool calls com muitos parâmetros.
 
 ### 8.5 set_label (Aplicar Etiquetas) - Workflow 02
 
@@ -529,6 +551,8 @@ Leads qualificados (Path 3) que chegam ao handoff recebem uma pontuação:
 
 5. Notify Vendor
    └── Envia WhatsApp ao vendedor com resumo expandido
+   └── Usa bodyParameters (keypair: number + text) em vez de jsonBody
+       (jsonBody com emojis/quebras de linha causava JSON inválido)
 
 6. Log Handoff
    └── Registra evento

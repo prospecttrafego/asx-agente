@@ -1,0 +1,57 @@
+{
+  "id": "WBqj1UKzZORCANPo",
+  "name": "05-Error-Logger",
+  "active": true,
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.errorTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "error-trigger-node",
+      "name": "Error Trigger"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "=INSERT INTO events (type, payload)\nVALUES (\n  'infra_error',\n  jsonb_build_object(\n    'workflow_id', '{{ $json.workflow?.id || \"\" }}',\n    'workflow_name', '{{ $json.workflow?.name || \"\" }}',\n    'execution_id', '{{ $json.execution?.id || \"\" }}',\n    'retry_of', '{{ $json.execution?.retryOf || \"\" }}',\n    'last_node', '{{ $json.execution?.lastNodeExecuted || \"\" }}',\n    'error_message', '{{ $json.execution?.error?.message || \"\" }}',\n    'error_stack', '{{ $json.execution?.error?.stack || \"\" }}'\n  )\n);",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        400,
+        0
+      ],
+      "id": "log-infra-error",
+      "name": "Log Infra Error",
+      "credentials": {
+        "postgres": {
+          "id": "CONFIGURE_ME",
+          "name": "CONFIGURE_ME"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Error Trigger": {
+      "main": [
+        [
+          {
+            "node": "Log Infra Error",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "callerPolicy": "workflowsFromSameOwner",
+    "availableInMCP": false
+  }
+}
