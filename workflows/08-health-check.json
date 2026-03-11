@@ -1,0 +1,191 @@
+{
+  "name": "08-Health-Check",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "minutes",
+              "minutesInterval": 5
+            }
+          ]
+        }
+      },
+      "name": "Schedule Trigger",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        0,
+        300
+      ],
+      "id": "de3efaa6-363c-4cf0-a3d6-ebd95e797efa"
+    },
+    {
+      "parameters": {
+        "url": "https://api.agenciaprospect.space/instance/fetchInstances",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "***"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 10000
+        }
+      },
+      "name": "Ping Evolution",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        280,
+        300
+      ],
+      "onError": "continueRegularOutput",
+      "id": "8773cb2c-4d66-47de-aaba-6e4acf37cfb0"
+    },
+    {
+      "parameters": {
+        "url": "https://chat.agenciaprospect.space/auth/sign_in",
+        "options": {
+          "timeout": 10000
+        }
+      },
+      "name": "Ping Chatwoot",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        560,
+        300
+      ],
+      "onError": "continueRegularOutput",
+      "id": "921cf440-19ee-4ed8-8660-b897d7206158"
+    },
+    {
+      "parameters": {
+        "url": "https://flow.agenciaprospect.space/api/v1/workflows",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "X-N8N-API-KEY",
+              "value": "***"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 10000
+        }
+      },
+      "name": "Ping N8N",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        840,
+        300
+      ],
+      "onError": "continueRegularOutput",
+      "id": "b0510ba6-8c29-464b-9c23-703131814c1d"
+    },
+    {
+      "parameters": {
+        "jsCode": "const evolution = $('Ping Evolution').first();\nconst chatwoot = $('Ping Chatwoot').first();\nconst n8n_ping = $('Ping N8N').first();\n\nfunction check(item, name) {\n  const hasError = item.json?.error || item.json?.code === 'ERR_NON_2XX_STATUS_CODE';\n  return {\n    service: name,\n    status: hasError ? 'down' : 'up',\n    error: hasError ? (item.json?.error?.message || item.json?.message || 'unknown') : null\n  };\n}\n\nreturn [{json: {\n  checks: [\n    check(evolution, 'evolution_api'),\n    check(chatwoot, 'chatwoot'),\n    check(n8n_ping, 'n8n')\n  ],\n  all_up: !evolution.json?.error && !chatwoot.json?.error && !n8n_ping.json?.error,\n  checked_at: new Date().toISOString()\n}}];"
+      },
+      "name": "Consolidate Results",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1120,
+        300
+      ],
+      "id": "42980dac-0c3a-4205-ac58-00cec19f5d51"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "INSERT INTO events (type, payload) VALUES ('health_check', $1::jsonb)",
+        "options": {
+          "queryReplacement": "={{ JSON.stringify($json) }}"
+        }
+      },
+      "name": "Log Health",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        1400,
+        300
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "***",
+          "name": "Supabase ASX"
+        }
+      },
+      "id": "5959676e-9a0f-4799-ac1e-461c9f8d6e75"
+    }
+  ],
+  "connections": {
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "Ping Evolution",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Ping Evolution": {
+      "main": [
+        [
+          {
+            "node": "Ping Chatwoot",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Ping Chatwoot": {
+      "main": [
+        [
+          {
+            "node": "Ping N8N",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Ping N8N": {
+      "main": [
+        [
+          {
+            "node": "Consolidate Results",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Consolidate Results": {
+      "main": [
+        [
+          {
+            "node": "Log Health",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "callerPolicy": "workflowsFromSameOwner",
+    "availableInMCP": false
+  }
+}

@@ -1,7 +1,5 @@
 {
-  "id": "7LvmLJIL7CdbWpbt",
   "name": "06-FB-Leads-Outbound-Webhook",
-  "active": true,
   "nodes": [
     {
       "parameters": {
@@ -81,7 +79,7 @@
       "credentials": {
         "postgres": {
           "id": "CONFIGURE_ME",
-          "name": "CONFIGURE_ME"
+          "name": "Supabase ASX"
         }
       }
     },
@@ -150,7 +148,7 @@
       "credentials": {
         "postgres": {
           "id": "CONFIGURE_ME",
-          "name": "CONFIGURE_ME"
+          "name": "Supabase ASX"
         }
       }
     },
@@ -247,13 +245,13 @@
       "credentials": {
         "postgres": {
           "id": "CONFIGURE_ME",
-          "name": "CONFIGURE_ME"
+          "name": "Supabase ASX"
         }
       }
     },
     {
       "parameters": {
-        "jsCode": "\nconst extract = $('Extract Form Fields').first().json;\nconst phone = $('Normalize Phone').first().json;\nconst cnpjData = $('Clean CNPJ').first().json;\nconst enrich = $('02A Company Enrich').first().json;\n\n// Volume mapping\nconst volumeMap = {\n  'Abaixo de 2.000': 1500,\n  'Entre 2.000 e 4.000': 3000,\n  'Entre 4.000 e 10.000': 7000,\n  'Acima de 10.000': 12000\n};\nconst volume_numerico = volumeMap[extract.volume_faixa] || 0;\n\n// State to UF mapping\nconst stateMap = {\n  'acre': 'AC', 'alagoas': 'AL', 'amapa': 'AP', 'amazonas': 'AM',\n  'bahia': 'BA', 'ceara': 'CE', 'distrito federal': 'DF',\n  'espirito santo': 'ES', 'goias': 'GO', 'maranhao': 'MA',\n  'mato grosso': 'MT', 'mato grosso do sul': 'MS',\n  'minas gerais': 'MG', 'para': 'PA', 'paraiba': 'PB',\n  'parana': 'PR', 'pernambuco': 'PE', 'piaui': 'PI',\n  'rio de janeiro': 'RJ', 'rio grande do norte': 'RN',\n  'rio grande do sul': 'RS', 'rondonia': 'RO', 'roraima': 'RR',\n  'santa catarina': 'SC', 'sao paulo': 'SP', 'sergipe': 'SE',\n  'tocantins': 'TO',\n  // Accented versions\n  'amapá': 'AP', 'ceará': 'CE', 'espírito santo': 'ES',\n  'goiás': 'GO', 'maranhão': 'MA', 'paraná': 'PR',\n  'piauí': 'PI', 'rondônia': 'RO', 'são paulo': 'SP'\n};\nconst rawState = (extract.estado_envio || '').trim();\nlet estado_uf = stateMap[rawState.toLowerCase()] || rawState.toUpperCase();\n// If already a 2-letter code, use as-is\nif (estado_uf.length > 2) estado_uf = rawState.substring(0, 2).toUpperCase();\n\n// N/NE regions\nconst NNE = ['AC','AM','AP','PA','RO','RR','TO','AL','BA','CE','MA','PB','PE','PI','RN','SE'];\nconst isNNE = NNE.includes(estado_uf);\n\n// Classification logic\nlet path, path_reason;\nif (volume_numerico < 4000) {\n  path = 2;\n  path_reason = 'Volume < R$4000 - distribuidor';\n} else if (isNNE) {\n  path = 3;\n  path_reason = 'Qualificado: volume >= 4k + N/NE';\n} else {\n  path = 2;\n  path_reason = 'Volume >= 4k mas fora N/NE - distribuidor';\n}\n\nconst path_label = path === 2 ? 'distributor' : 'qualified';\nconst empresa = enrich.nome_fantasia || enrich.razao_social || extract.nome;\n\nreturn [{\n  json: {\n    // Original form data\n    facebook_lead_id: extract.facebook_lead_id,\n    form_id: extract.form_id,\n    page_id: extract.page_id,\n    nome: extract.nome,\n    email: extract.email,\n    telefone_raw: extract.telefone_raw,\n    telefone: phone.telefone,\n    perfil: extract.perfil,\n    volume_faixa: extract.volume_faixa,\n    volume_numerico: volume_numerico,\n    cnpj_raw: extract.cnpj_raw,\n    cnpj: cnpjData.cnpj,\n    estado_envio: extract.estado_envio,\n    estado_uf: estado_uf,\n    // Enrichment\n    cnpj_valido: true,\n    razao_social: enrich.razao_social || '',\n    nome_fantasia: enrich.nome_fantasia || '',\n    cnae: enrich.cnae || '',\n    cnpj_city: enrich.city || '',\n    cnpj_state: enrich.state || '',\n    // Classification\n    path: path,\n    path_reason: path_reason,\n    path_label: path_label,\n    empresa: empresa,\n    isNNE: isNNE\n  }\n}];\n"
+        "jsCode": "\nconst extract = $('Extract Form Fields').first().json;\nconst phone = $('Normalize Phone').first().json;\nconst cnpjData = $('Clean CNPJ').first().json;\nconst enrich = $('02A Company Enrich').first().json;\n\n// Volume mapping\nconst volumeMap = {\n  'Abaixo de 2.000': 1500,\n  'Entre 2.000 e 4.000': 3000,\n  'Entre 4.000 e 10.000': 7000,\n  'Acima de 10.000': 12000\n};\nconst volume_numerico = volumeMap[extract.volume_faixa] || 0;\n\n// State to UF mapping\nconst stateMap = {\n  'acre': 'AC', 'alagoas': 'AL', 'amapa': 'AP', 'amazonas': 'AM',\n  'bahia': 'BA', 'ceara': 'CE', 'distrito federal': 'DF',\n  'espirito santo': 'ES', 'goias': 'GO', 'maranhao': 'MA',\n  'mato grosso': 'MT', 'mato grosso do sul': 'MS',\n  'minas gerais': 'MG', 'para': 'PA', 'paraiba': 'PB',\n  'parana': 'PR', 'pernambuco': 'PE', 'piaui': 'PI',\n  'rio de janeiro': 'RJ', 'rio grande do norte': 'RN',\n  'rio grande do sul': 'RS', 'rondonia': 'RO', 'roraima': 'RR',\n  'santa catarina': 'SC', 'sao paulo': 'SP', 'sergipe': 'SE',\n  'tocantins': 'TO',\n  // Accented versions\n  'amap\u00e1': 'AP', 'cear\u00e1': 'CE', 'esp\u00edrito santo': 'ES',\n  'goi\u00e1s': 'GO', 'maranh\u00e3o': 'MA', 'paran\u00e1': 'PR',\n  'piau\u00ed': 'PI', 'rond\u00f4nia': 'RO', 's\u00e3o paulo': 'SP'\n};\nconst rawState = (extract.estado_envio || '').trim();\nlet estado_uf = stateMap[rawState.toLowerCase()] || rawState.toUpperCase();\n// If already a 2-letter code, use as-is\nif (estado_uf.length > 2) estado_uf = rawState.substring(0, 2).toUpperCase();\n\n// N/NE regions\nconst NNE = ['AC','AM','AP','PA','RO','RR','TO','AL','BA','CE','MA','PB','PE','PI','RN','SE'];\nconst isNNE = NNE.includes(estado_uf);\n\n// Classification logic\nlet path, path_reason;\nif (volume_numerico < 4000) {\n  path = 2;\n  path_reason = 'Volume < R$4000 - distribuidor';\n} else if (isNNE) {\n  path = 3;\n  path_reason = 'Qualificado: volume >= 4k + N/NE';\n} else {\n  path = 2;\n  path_reason = 'Volume >= 4k mas fora N/NE - distribuidor';\n}\n\nconst path_label = path === 2 ? 'distributor' : 'qualified';\nconst empresa = enrich.nome_fantasia || enrich.razao_social || extract.nome;\n\nreturn [{\n  json: {\n    // Original form data\n    facebook_lead_id: extract.facebook_lead_id,\n    form_id: extract.form_id,\n    page_id: extract.page_id,\n    nome: extract.nome,\n    email: extract.email,\n    telefone_raw: extract.telefone_raw,\n    telefone: phone.telefone,\n    perfil: extract.perfil,\n    volume_faixa: extract.volume_faixa,\n    volume_numerico: volume_numerico,\n    cnpj_raw: extract.cnpj_raw,\n    cnpj: cnpjData.cnpj,\n    estado_envio: extract.estado_envio,\n    estado_uf: estado_uf,\n    // Enrichment\n    cnpj_valido: true,\n    razao_social: enrich.razao_social || '',\n    nome_fantasia: enrich.nome_fantasia || '',\n    cnae: enrich.cnae || '',\n    cnpj_city: enrich.city || '',\n    cnpj_state: enrich.state || '',\n    // Classification\n    path: path,\n    path_reason: path_reason,\n    path_label: path_label,\n    empresa: empresa,\n    isNNE: isNNE\n  }\n}];\n"
       },
       "id": "05cecd77-64af-49bc-ab2f-2d1772a3382e",
       "name": "Classify Lead",
@@ -283,7 +281,7 @@
       "credentials": {
         "postgres": {
           "id": "CONFIGURE_ME",
-          "name": "CONFIGURE_ME"
+          "name": "Supabase ASX"
         }
       }
     },
@@ -522,7 +520,7 @@
       "credentials": {
         "postgres": {
           "id": "CONFIGURE_ME",
-          "name": "CONFIGURE_ME"
+          "name": "Supabase ASX"
         }
       }
     },
@@ -593,7 +591,7 @@
       "credentials": {
         "postgres": {
           "id": "CONFIGURE_ME",
-          "name": "CONFIGURE_ME"
+          "name": "Supabase ASX"
         }
       }
     },
@@ -616,7 +614,7 @@
       "credentials": {
         "postgres": {
           "id": "CONFIGURE_ME",
-          "name": "CONFIGURE_ME"
+          "name": "Supabase ASX"
         }
       }
     },
@@ -649,7 +647,7 @@
     },
     {
       "parameters": {
-        "jsCode": "\nconst cl = $('Classify Lead').first().json;\nconst convId = $('Create Conversation').first().json.id || '';\nconst fbLeadId = $('Save fb_lead').first().json.id || '';\n\nlet contactId = 0;\ntry { contactId = $('Extract New Contact').first().json.contact_id; } catch(e) {}\ntry { contactId = $('Use Existing Contact').first().json.contact_id; } catch(e) {}\n\nconst nome = cl.nome.split(' ')[0];\nconst empresa = cl.empresa || cl.razao_social || cl.nome_fantasia || '';\nconst perfil = cl.perfil;\nconst volume = cl.volume_faixa;\nconst estado = cl.estado_envio;\n\nconst message = `Ola ${nome}! Aqui e o Joao, consultor comercial da ASX Iluminacao.\\n\\nVi que a *${empresa}* se cadastrou para negociacao direta conosco. Que otimo saber do seu interesse!\\n\\nConfirmei aqui seus dados do cadastro:\\n• Perfil: ${perfil}\\n• Volume mensal: ${volume}\\n• Estado: ${estado}\\n\\nEsta tudo certo? Posso dar andamento ao seu atendimento?`;\n\nreturn [{\n  json: {\n    message: message,\n    phone: cl.telefone,\n    fb_lead_id: fbLeadId,\n    contact_id: contactId,\n    conversation_id: convId\n  }\n}];\n"
+        "jsCode": "\nconst cl = $('Classify Lead').first().json;\nconst convId = $('Create Conversation').first().json.id || '';\nconst fbLeadId = $('Save fb_lead').first().json.id || '';\n\nlet contactId = 0;\ntry { contactId = $('Extract New Contact').first().json.contact_id; } catch(e) {}\ntry { contactId = $('Use Existing Contact').first().json.contact_id; } catch(e) {}\n\nconst nome = cl.nome.split(' ')[0];\nconst empresa = cl.empresa || cl.razao_social || cl.nome_fantasia || '';\nconst perfil = cl.perfil;\nconst volume = cl.volume_faixa;\nconst estado = cl.estado_envio;\n\nconst message = `Ola ${nome}! Aqui e o Joao, consultor comercial da ASX Iluminacao.\\n\\nVi que a *${empresa}* se cadastrou para negociacao direta conosco. Que otimo saber do seu interesse!\\n\\nConfirmei aqui seus dados do cadastro:\\n\u2022 Perfil: ${perfil}\\n\u2022 Volume mensal: ${volume}\\n\u2022 Estado: ${estado}\\n\\nEsta tudo certo? Posso dar andamento ao seu atendimento?`;\n\nreturn [{\n  json: {\n    message: message,\n    phone: cl.telefone,\n    fb_lead_id: fbLeadId,\n    contact_id: contactId,\n    conversation_id: convId\n  }\n}];\n"
       },
       "id": "45043ed0-ab54-4641-9ea5-0127a34c2f04",
       "name": "Compose Message P3",
@@ -716,7 +714,7 @@
       "credentials": {
         "postgres": {
           "id": "CONFIGURE_ME",
-          "name": "CONFIGURE_ME"
+          "name": "Supabase ASX"
         }
       }
     },
@@ -749,7 +747,7 @@
     },
     {
       "parameters": {
-        "content": "### Path 2 - Distribuidor\nBusca distribuidores no estado → Envia lista por WhatsApp",
+        "content": "### Path 2 - Distribuidor\nBusca distribuidores no estado \u2192 Envia lista por WhatsApp",
         "height": 96,
         "width": 366,
         "color": 4
@@ -765,7 +763,7 @@
     },
     {
       "parameters": {
-        "content": "### Path 3 - Qualificado\nEnvia mensagem de qualificacao → Agente inbound cuida do resto",
+        "content": "### Path 3 - Qualificado\nEnvia mensagem de qualificacao \u2192 Agente inbound cuida do resto",
         "height": 96,
         "width": 350,
         "color": 5
@@ -915,6 +913,98 @@
       ],
       "id": "1e3614de-9952-445b-8b8a-aeb63e58e312",
       "name": "Acknowledge FB Event"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "INSERT INTO events (type, payload) VALUES ('workflow_success', $1::jsonb)",
+        "options": {
+          "queryReplacement": "={{ JSON.stringify({ workflow: \"WF06\", path: 1, reason: \"cnpj_bad_format\", facebook_lead_id: $('Extract Form Fields').first().json.facebook_lead_id }) }}"
+        }
+      },
+      "name": "Log Success P1 Format",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        1600,
+        624
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "CONFIGURE_ME",
+          "name": "Supabase ASX"
+        }
+      },
+      "id": "9fdabf7a-6207-4d50-b913-852c4c5840a6"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "INSERT INTO events (type, payload) VALUES ('workflow_success', $1::jsonb)",
+        "options": {
+          "queryReplacement": "={{ JSON.stringify({ workflow: \"WF06\", path: 1, reason: \"cnpj_invalid\", facebook_lead_id: $('Extract Form Fields').first().json.facebook_lead_id }) }}"
+        }
+      },
+      "name": "Log Success P1 Invalid",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        2480,
+        624
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "CONFIGURE_ME",
+          "name": "Supabase ASX"
+        }
+      },
+      "id": "ffb61d55-fd73-4ec0-a1bb-e8b91c24bd81"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "INSERT INTO events (type, payload) VALUES ('workflow_success', $1::jsonb)",
+        "options": {
+          "queryReplacement": "={{ JSON.stringify({ workflow: \"WF06\", path: 2, phone: $('Normalize Phone').first().json.telefone, facebook_lead_id: $('Extract Form Fields').first().json.facebook_lead_id }) }}"
+        }
+      },
+      "name": "Log Success P2",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        6400,
+        656
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "CONFIGURE_ME",
+          "name": "Supabase ASX"
+        }
+      },
+      "id": "a47e428c-6077-418f-b8dc-d5875eceb3ac"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "INSERT INTO events (type, payload) VALUES ('workflow_success', $1::jsonb)",
+        "options": {
+          "queryReplacement": "={{ JSON.stringify({ workflow: \"WF06\", path: 3, phone: $('Normalize Phone').first().json.telefone, facebook_lead_id: $('Extract Form Fields').first().json.facebook_lead_id }) }}"
+        }
+      },
+      "name": "Log Success P3",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        5840,
+        -48
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "CONFIGURE_ME",
+          "name": "Supabase ASX"
+        }
+      },
+      "id": "12634655-d47b-4c3d-88b9-71a77150d0a1"
     }
   ],
   "connections": {
@@ -1274,13 +1364,51 @@
           }
         ]
       ]
+    },
+    "Save Disqualified Format": {
+      "main": [
+        [
+          {
+            "node": "Log Success P1 Format",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Save Disqualified Invalid": {
+      "main": [
+        [
+          {
+            "node": "Log Success P1 Invalid",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Add Labels P2": {
+      "main": [
+        [
+          {
+            "node": "Log Success P2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Add Labels P3": {
+      "main": [
+        [
+          {
+            "node": "Log Success P3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     }
   },
-  "settings": {
-    "executionOrder": "v1",
-    "callerPolicy": "workflowsFromSameOwner",
-    "availableInMCP": false,
-    "timeSavedMode": "fixed",
-    "binaryMode": "separate"
-  }
+  "settings": {}
 }

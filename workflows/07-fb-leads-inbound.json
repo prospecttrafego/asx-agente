@@ -1,7 +1,5 @@
 {
-  "id": "hGsfyVT8TPWau6RH",
   "name": "07-FB-Leads-Inbound",
-  "active": true,
   "nodes": [
     {
       "parameters": {
@@ -361,7 +359,7 @@
       "credentials": {
         "openAiApi": {
           "id": "CONFIGURE_ME",
-          "name": "CONFIGURE_ME"
+          "name": "OpenAI-Audio"
         }
       }
     },
@@ -488,7 +486,7 @@
       "credentials": {
         "openAiApi": {
           "id": "CONFIGURE_ME",
-          "name": "CONFIGURE_ME"
+          "name": "OpenAI-Image"
         }
       }
     },
@@ -586,7 +584,7 @@
       "credentials": {
         "redis": {
           "id": "CONFIGURE_ME",
-          "name": "CONFIGURE_ME"
+          "name": "Redis ASX"
         }
       }
     },
@@ -608,7 +606,7 @@
       "credentials": {
         "redis": {
           "id": "CONFIGURE_ME",
-          "name": "CONFIGURE_ME"
+          "name": "Redis ASX"
         }
       }
     },
@@ -725,7 +723,7 @@
       "credentials": {
         "redis": {
           "id": "CONFIGURE_ME",
-          "name": "CONFIGURE_ME"
+          "name": "Redis ASX"
         }
       }
     },
@@ -748,7 +746,7 @@
       "credentials": {
         "postgres": {
           "id": "CONFIGURE_ME",
-          "name": "CONFIGURE_ME"
+          "name": "Supabase ASX"
         }
       }
     },
@@ -770,7 +768,7 @@
       "credentials": {
         "postgres": {
           "id": "CONFIGURE_ME",
-          "name": "CONFIGURE_ME"
+          "name": "Supabase ASX"
         }
       }
     },
@@ -970,7 +968,7 @@
       "credentials": {
         "openAiApi": {
           "id": "CONFIGURE_ME",
-          "name": "CONFIGURE_ME"
+          "name": "OpenAI GPT-4"
         }
       }
     },
@@ -991,7 +989,7 @@
       "credentials": {
         "postgres": {
           "id": "CONFIGURE_ME",
-          "name": "CONFIGURE_ME"
+          "name": "Supabase ASX"
         }
       }
     },
@@ -1194,7 +1192,7 @@
       "credentials": {
         "openAiApi": {
           "id": "CONFIGURE_ME",
-          "name": "CONFIGURE_ME"
+          "name": "OpenAI GPT-4"
         }
       }
     },
@@ -1215,7 +1213,7 @@
       "credentials": {
         "postgres": {
           "id": "CONFIGURE_ME",
-          "name": "CONFIGURE_ME"
+          "name": "Supabase ASX"
         }
       }
     },
@@ -1621,7 +1619,7 @@
       "credentials": {
         "postgres": {
           "id": "CONFIGURE_ME",
-          "name": "CONFIGURE_ME"
+          "name": "Supabase ASX"
         }
       }
     },
@@ -1829,6 +1827,52 @@
         272
       ],
       "webhookId": "fb4a02c5-e1d0-40c6-8d18-0ca4052a6e7e"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "INSERT INTO events (type, payload) VALUES ('workflow_success', $1::jsonb)",
+        "options": {
+          "queryReplacement": "={{ JSON.stringify({ workflow: \"WF07\", action: \"messages_sent\", phone: $('Merge Messages').first().json.phone }) }}"
+        }
+      },
+      "name": "Log Success Send",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        6336,
+        192
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "CONFIGURE_ME",
+          "name": "Supabase ASX"
+        }
+      },
+      "id": "4783cc2d-652a-43da-8960-53fe5ced93ef"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "INSERT INTO events (type, payload) VALUES ('workflow_success', $1::jsonb)",
+        "options": {
+          "queryReplacement": "={{ JSON.stringify({ workflow: \"WF07\", action: \"vendor_notified\", phone: $('Merge Messages').first().json.phone }) }}"
+        }
+      },
+      "name": "Log Success Notify",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        4896,
+        -256
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "CONFIGURE_ME",
+          "name": "Supabase ASX"
+        }
+      },
+      "id": "576ff8a9-c795-42d3-bf3b-1ab1e82b1772"
     }
   ],
   "connections": {
@@ -2320,7 +2364,13 @@
     },
     "Loop Items": {
       "main": [
-        [],
+        [
+          {
+            "node": "Log Success Send",
+            "type": "main",
+            "index": 0
+          }
+        ],
         [
           {
             "node": "Presence Composing",
@@ -2384,11 +2434,18 @@
           }
         ]
       ]
+    },
+    "Notify Vendor": {
+      "main": [
+        [
+          {
+            "node": "Log Success Notify",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     }
   },
-  "settings": {
-    "executionOrder": "v1",
-    "callerPolicy": "workflowsFromSameOwner",
-    "availableInMCP": false
-  }
+  "settings": {}
 }
