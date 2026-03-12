@@ -1,1 +1,0 @@
-RAILS_ENV=production bundle exec rails runner "user = User.find_by(email: 'tiago@asx.com.br'); user.password = 'Asx@Tiago2026'; user.password_confirmation = 'Asx@Tiago2026'; user.confirmed_at = Time.now unless user.confirmed_at; user.save!; puts 'Tiago: senha definida com sucesso'"
