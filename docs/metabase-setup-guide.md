@@ -1,6 +1,6 @@
 # Guia de Instalacao — Metabase no Easypanel
 
-Este guia cobre a instalacao completa do Metabase no Easypanel com conexao ao Supabase.
+Este guia cobre a instalacao completa do Metabase no Easypanel usando o **template nativo** (1-click), com conexao ao Supabase.
 
 **Resultado final:** Dashboard tecnico acessivel em `https://monitor.agenciaprospect.space`
 
@@ -14,73 +14,46 @@ Este guia cobre a instalacao completa do Metabase no Easypanel com conexao ao Su
 
 ---
 
-## Passo 1 — Criar servico no Easypanel
+## Passo 1 — Criar o Metabase via template nativo
 
 1. Acesse o Easypanel do seu VPS
-2. Clique em **"Create Project"** (ou use um projeto existente como "asx")
-3. Dentro do projeto, clique em **"+ Service"** → **"Docker"**
-4. Configure:
+2. Entre no projeto desejado (ex: `agents`)
+3. Clique em **"Modelos"** (ou "Templates")
+4. Pesquise por **"metabase"**
+5. Clique no card do **Metabase**
+6. Preencha os campos:
 
-| Campo | Valor |
-|-------|-------|
-| Service Name | `metabase` |
-| Image | `metabase/metabase:latest` |
-| Port | `3000` |
+| Campo | O que preencher |
+|-------|----------------|
+| **App Service Name** | `metabase` (pode manter o padrao) |
+| **App Service Image** | Manter o padrao (`metabase/metabase:v0.59` ou a versao que aparecer) |
+| **Metabase Site Name (Title)** | `ASX SDR Monitor` (ou deixar em branco — e so o titulo que aparece na interface) |
 
-5. Clique em **"Deploy"** para criar o servico
+7. Clique em **"Criar"**
 
----
+O Easypanel vai automaticamente:
+- Criar o container com a imagem do Metabase
+- Configurar a porta 3000
+- Criar um volume persistente em `/metabase-data` (seus dados sobrevivem a restarts)
+- Setar as variaveis `MB_DB_FILE`, `MB_SITE_NAME` e `MB_APPLICATION_NAME`
 
-## Passo 2 — Configurar variaveis de ambiente
-
-Na aba **"Environment"** do servico metabase, adicione:
-
-```
-MB_DB_TYPE=h2
-MB_JETTY_PORT=3000
-MB_DB_FILE=/metabase-data/metabase.db
-JAVA_TIMEZONE=America/Sao_Paulo
-```
-
-**O que cada variavel faz:**
-- `MB_DB_TYPE=h2` — Banco interno do Metabase (nao confundir com o Supabase que sera a fonte de dados)
-- `MB_JETTY_PORT=3000` — Porta do servidor web
-- `MB_DB_FILE=/metabase-data/metabase.db` — Onde o Metabase salva suas configuracoes
-- `JAVA_TIMEZONE=America/Sao_Paulo` — Fuso horario para os graficos
+**Aguarde 1-2 minutos** — o Metabase demora um pouco para iniciar pela primeira vez (ele faz setup interno do banco H2).
 
 ---
 
-## Passo 3 — Configurar volume persistente
+## Passo 2 — Configurar dominio
 
-Na aba **"Volumes"** (ou "Mounts") do servico:
+### 2.1 No Easypanel
 
-1. Clique em **"Add Volume"**
-2. Configure:
+1. Apos o servico estar criado, clique nele para abrir os detalhes
+2. Va na aba **"Dominios"** (ou "Domains")
+3. Remova o dominio automatico gerado pelo Easypanel (se houver)
+4. Clique em **"Adicionar Dominio"**
+5. Digite: `monitor.agenciaprospect.space`
+6. Marque **HTTPS** (Let's Encrypt automatico)
+7. Salve
 
-| Campo | Valor |
-|-------|-------|
-| Type | Volume |
-| Name | `metabase-data` |
-| Mount Path | `/metabase-data` |
-
-Isso garante que as configuracoes do Metabase sobrevivam a restarts do container.
-
-3. Clique em **"Deploy"** novamente para aplicar
-
----
-
-## Passo 4 — Configurar dominio
-
-### 4.1 No Easypanel
-
-1. Va na aba **"Domains"** do servico metabase
-2. Clique em **"Add Domain"**
-3. Digite: `monitor.agenciaprospect.space`
-4. Port: `3000`
-5. Marque **"HTTPS"** (Let's Encrypt)
-6. Salve
-
-### 4.2 No DNS (Hostinger ou Cloudflare)
+### 2.2 No DNS (Hostinger ou Cloudflare)
 
 1. Acesse o painel de DNS do dominio `agenciaprospect.space`
 2. Crie um registro:
@@ -91,26 +64,24 @@ Isso garante que as configuracoes do Metabase sobrevivam a restarts do container
 
 3. Aguarde propagacao (geralmente 5-10 minutos)
 
-### 4.3 Verificar
+### 2.3 Verificar
 
 Acesse `https://monitor.agenciaprospect.space` — deve aparecer a tela de setup do Metabase.
 
-Se nao carregar, aguarde uns minutos. O Metabase demora ~1-2 minutos para iniciar na primeira vez.
-
 ---
 
-## Passo 5 — Setup inicial do Metabase
+## Passo 3 — Setup inicial do Metabase
 
 Ao acessar pela primeira vez, o Metabase mostra um wizard de configuracao:
 
-### 5.1 Idioma
+### 3.1 Idioma
 - Selecione **"Portugues (Brasil)"**
 
-### 5.2 Conta de administrador
+### 3.2 Conta de administrador
 - Preencha com seus dados (email e senha da agencia Convert)
-- **Guarde essas credenciais** — elas serao necessarias para configurar o dashboard
+- **Guarde essas credenciais** — elas serao necessarias para eu configurar o dashboard
 
-### 5.3 Adicionar banco de dados
+### 3.3 Adicionar banco de dados
 
 Quando o wizard perguntar "Adicione seus dados", selecione **PostgreSQL** e preencha:
 
@@ -123,23 +94,22 @@ Quando o wizard perguntar "Adicione seus dados", selecione **PostgreSQL** e pree
 | Username | `postgres.hxcfvyhjyibdexazrhox` |
 | Password | *(senha do banco Supabase — a mesma da connection string no .env)* |
 
-### 5.4 Opcoes avancadas
+### 3.4 SSL
 
-Expanda "Additional JDBC connection string options" e adicione:
+Se aparecer uma opcao de SSL, marque **"Use SSL"** ou **"Require"**.
 
+Caso nao apareca toggle de SSL, expanda "Additional JDBC connection string options" e adicione:
 ```
 ssl=true&sslmode=require
 ```
 
-Ou se houver um toggle de SSL, marque **"Use SSL"**.
-
-### 5.5 Salvar e continuar
+### 3.5 Salvar e continuar
 
 Clique em salvar. O Metabase vai se conectar ao Supabase e sincronizar o schema.
 
 ---
 
-## Passo 6 — Verificar conexao
+## Passo 4 — Verificar conexao
 
 Apos o setup, va em **Admin** (engrenagem no canto superior direito) → **Databases** → **ASX Supabase**
 
@@ -169,7 +139,7 @@ Se alguma tabela ou view nao aparecer, clique em **"Sync database schema now"**.
 
 ---
 
-## Passo 7 — Me avisar
+## Passo 5 — Me avisar
 
 Apos completar todos os passos acima, me avise com:
 - Confirmacao de que o Metabase esta acessivel em `https://monitor.agenciaprospect.space`
@@ -181,9 +151,10 @@ Eu entao configurarei o dashboard com os 7 cards e 3 alertas definidos no plano.
 
 ## Troubleshooting
 
-### "Connection refused" ou "Could not connect"
-- Verifique se o DNS ja propagou: `ping monitor.agenciaprospect.space`
-- Aguarde 2 minutos apos o deploy — o Metabase demora para iniciar
+### Metabase nao abre / fica carregando
+- Na primeira vez, o Metabase pode demorar 2-3 minutos para iniciar
+- No Easypanel, verifique se o servico esta com status "Running"
+- Veja os logs do servico no Easypanel para identificar erros
 
 ### "Unable to connect to database" (ao conectar Supabase)
 - Verifique se a senha esta correta (sem espacos extras)
@@ -194,8 +165,8 @@ Eu entao configurarei o dashboard com os 7 cards e 3 alertas definidos no plano.
 
 ### Tabelas nao aparecem
 - Va em Admin → Databases → ASX Supabase → "Sync database schema now"
-- Verifique se voce executou os SQLs (001 e 002) no Supabase SQL Editor
+- Verifique se voce executou os SQLs (001 e 002) no Supabase SQL Editor antes
 
-### Metabase reinicia sozinho / perde configuracoes
-- Verifique se o volume `/metabase-data` esta configurado corretamente
-- No Easypanel, confirme que o volume nao esta marcado como "ephemeral"
+### Erro "prepared statement already exists"
+- Isso acontece com o pooler do Supabase em modo Transaction
+- Solucao: usar a conexao direta (Host: `db.hxcfvyhjyibdexazrhox.supabase.co`) em vez do pooler
