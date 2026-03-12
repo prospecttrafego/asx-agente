@@ -45,7 +45,7 @@ O agente **Joao** conduz a qualificacao no Path 3, coletando informacoes em 3 et
 | Servico | Versao | Funcao |
 |---------|--------|--------|
 | **n8n** | 2.3.2 | Orquestrador de workflows |
-| **OpenAI** | GPT-4 | LLM do agente de IA |
+| **OpenAI** | GPT-4.1-mini | LLM do agente de IA |
 | **Supabase** | Postgres | Banco de dados e memoria |
 | **Redis** | - | Cache e gestao de filas |
 | **Chatwoot** | 4.9.2 | Painel de atendimento omnichannel |
@@ -64,11 +64,11 @@ ASX-Agente/
 │
 ├── docs/
 │   ├── logica-do-fluxo.md    # Especificacao completa do sistema
-│   ├── distribuidores-asx-brasil.csv  # Base de distribuidores (504 registros)
+│   ├── distribuidores-asx-brasil.csv  # Base de distribuidores (~83 ativos)
 │   └── arquivo/
 │       └── fluxo-antigo.md   # Fluxo anterior (obsoleto)
 │
-├── workflows/                # 10 workflows n8n exportados (JSON)
+├── workflows/                # 11 workflows n8n exportados (JSON)
 │   ├── README.md             # Mapa, dependencias e como importar
 │   ├── 06-fb-leads-outbound-webhook.json
 │   ├── 07-fb-leads-inbound.json
@@ -83,11 +83,11 @@ ASX-Agente/
 
 ## Workflows
 
-O sistema e composto por **10 workflows** no n8n:
+O sistema e composto por **11 workflows** no n8n:
 
 | Tipo | Workflow | Funcao |
 |------|----------|--------|
-| **Principal** | 06-FB-Leads-Outbound | Processa formulario Facebook, classifica e envia 1a mensagem |
+| **Principal** | 06-FB-Leads-Outbound-Webhook | Processa formulario Facebook, classifica e envia 1a mensagem |
 | **Principal** | 07-FB-Leads-Inbound | Recebe respostas, roteia para agente IA |
 | **Sub-WF** | 02-Tool-Label | Aplica labels no Chatwoot |
 | **Sub-WF** | 02A-Company-Enrich | Valida CNPJ via Receita Federal |
@@ -95,8 +95,9 @@ O sistema e composto por **10 workflows** no n8n:
 | **Sub-WF** | 02C-Agent-Log | Registra eventos do agente |
 | **Sub-WF** | 02D-Find-Distributors | Busca distribuidores por estado |
 | **Sub-WF** | 03-Finalize-Handoff | Cria lead, atribui vendedor, transfere conversa |
-| **Auxiliar** | 04-Chatwoot-Message-Logger | Salva mensagens na base |
-| **Auxiliar** | 05-Error-Logger | Captura erros |
+| **Auxiliar** | 04-Chatwoot-Message-Logger | Salva mensagens de vendedores na base |
+| **Auxiliar** | 05-Error-Logger | Captura erros dos workflows |
+| **Auxiliar** | 08-Health-Check | Monitoramento operacional a cada 5 min (leads, mensagens, servicos) |
 
 Detalhes completos em [`workflows/README.md`](workflows/README.md).
 
@@ -135,5 +136,10 @@ Todos os paths e o fluxo E2E foram testados e validados:
 | 05 | E2E — Path 3 completo com handoff | Validado |
 | 06 | E2E — Retest apos bug fixes | Validado |
 | 07 | E2E — Validacao final (finalize fix) | Validado |
+| 08 | WF06 — Hotfix webhook Meta + backfill leads reais | Validado |
+| 09 | Auditoria completa dos workflows + rebuild WF08 | Validado |
+| 10 | WF07 — Batching Redis com msgId + hardening | Validado |
+| 11 | Chatwoot — Contexto enriquecido + message syncing | Validado |
+| 12 | WF06 — Path 2 mensagem com motivo real (4 cenarios) | Validado |
 
 Detalhes de cada teste em `testes/`.

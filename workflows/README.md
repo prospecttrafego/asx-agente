@@ -35,9 +35,9 @@ Chamados como tools pelo agente IA dentro do WF07:
 
 | Arquivo | Nome no n8n | Funcao |
 |---------|-------------|--------|
-| `04-chatwoot-message-logger.json` | 04-Chatwoot-Message-Logger | Salva mensagens do Chatwoot na tabela ia_messages |
-| `05-error-logger.json` | 05-Error-Logger | Captura e registra erros dos workflows |
-| `08-health-check.json` | 08-Health-Check | Pinga Evolution API, Chatwoot e n8n a cada 5 min e registra status na tabela events |
+| `04-chatwoot-message-logger.json` | 04-Chatwoot-Message-Logger | Salva mensagens de vendedores (Chatwoot webhook) na tabela messages |
+| `05-error-logger.json` | 05-Error-Logger | Captura e registra erros dos workflows na tabela events |
+| `08-health-check.json` | 08-Health-Check | Monitoramento operacional a cada 5 min: pinga servicos, verifica pipeline de leads, saude de mensagens, execucoes WF06/WF07, e consolida relatorio com severidade (ok/warning/critical) |
 
 ## Grafo de Dependencias
 
@@ -70,7 +70,7 @@ Facebook Ads (formulario)
 
 [WF04] Chatwoot Message Logger ← Webhook do Chatwoot (salva mensagens)
 [WF05] Error Logger ← Error trigger (captura falhas)
-[WF08] Health Check ← Schedule (5 min) → Ping servicos → Log status
+[WF08] Health Check ← Schedule (5 min) → Ping servicos + Lead/Message/WF health → Log status
 ```
 
 ## IDs dos Workflows no n8n

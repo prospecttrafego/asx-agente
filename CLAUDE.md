@@ -9,7 +9,7 @@ O projeto real roda em servicos cloud (n8n, Supabase, Chatwoot, Evolution API).
 | Servico | Versao | Funcao | URL |
 |---------|--------|--------|-----|
 | n8n | 2.3.2 | Orquestrador de workflows | `https://flow.agenciaprospect.space` |
-| OpenAI | GPT-4 | LLM do agente | via API |
+| OpenAI | GPT-4.1-mini | LLM do agente | via API |
 | Supabase | - | Banco de dados (Postgres) | `https://hxcfvyhjyibdexazrhox.supabase.co` |
 | Redis | - | Cache e gestao de filas | interno |
 | Chatwoot | 4.9.2 (selfhosted) | Painel de atendimento omnichannel | `https://chat.agenciaprospect.space` |
@@ -21,11 +21,11 @@ O projeto real roda em servicos cloud (n8n, Supabase, Chatwoot, Evolution API).
 | Pasta/Arquivo | Conteudo |
 |---------------|----------|
 | `docs/logica-do-fluxo.md` | Especificacao completa do fluxo (3 paths, agent, scoring, handoff) |
-| `docs/distribuidores-asx-brasil.csv` | Base de 504 distribuidores parceiros |
+| `docs/distribuidores-asx-brasil.csv` | Base de distribuidores parceiros (CSV completo, ~83 ativos) |
 | `docs/arquivo/` | Fluxo anterior (obsoleto, referencia historica) |
-| `workflows/` | 10 workflows n8n exportados como JSON (sanitizados) |
+| `workflows/` | 11 workflows n8n exportados como JSON (sanitizados) |
 | `workflows/README.md` | Mapa de workflows, dependencias e como importar |
-| `testes/` | Casos de teste documentados (7 testes, todos validados) |
+| `testes/` | Casos de teste documentados (12 testes) |
 | `.env.example` | Template de variaveis de ambiente |
 
 ## Logica do Fluxo
@@ -54,17 +54,23 @@ O agente "Joao" qualifica leads vindos do Facebook Ads e faz handoff para vended
 | `OvvMcnq571vIb9bK` | 03-Finalize-Handoff | Sub-WF |
 | `MlscoOb4IqmMpgQr` | 04-Chatwoot-Message-Logger | Auxiliar |
 | `WBqj1UKzZORCANPo` | 05-Error-Logger | Auxiliar |
+| `Oj8SgieQ4HH7Czbk` | 08-Health-Check | Auxiliar |
 
 ## Tabelas no Supabase
 
 | Tabela | Proposito |
 |--------|-----------|
 | `fb_leads` | Cada submissao do formulario Facebook |
-| `ia_messages` | Historico de mensagens (phone, direction, content, session_id) |
+| `ia_messages` | Historico de mensagens IA (phone, direction, content, session_id) |
+| `messages` | Mensagens do lado vendedor (via Chatwoot webhook) |
 | `leads` | Leads qualificados (score, class, priority, source) |
+| `contacts` | Registro de contatos (phone, name) |
+| `companies` | Cache de dados de empresas (CNPJ, razao social, CNAE) |
+| `agents` | Vendedores/agentes (nome, phone, team_id) |
 | `assignments` | Vinculo lead-vendedor (round-robin) |
-| `distributors` | Distribuidores parceiros (83 ativos) |
+| `distributors` | Distribuidores parceiros (~83 ativos) |
 | `distributor_recommendations` | Historico de recomendacoes feitas |
+| `events` | Log universal de eventos (health_check, workflow_success, infra_error, etc.) |
 
 ## Como Acessar os Servicos
 

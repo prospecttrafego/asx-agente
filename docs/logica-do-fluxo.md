@@ -154,11 +154,18 @@ Este workflow é acionado automaticamente quando um lead preenche o formulário 
 ### 4.1 Sequência Completa
 
 ```
-1. Facebook Lead Ads Trigger
-   └── Dispara quando lead preenche o formulário
+1. Webhook (path: meta-leads)
+   └── Recebe POST do Facebook (leadgen webhook) e GET (verificação)
+   └── GET: valida hub.verify_token e retorna challenge
+   └── POST: responde 200 imediatamente
+
+1b. Buscar Dados do Lead via Graph API
+   └── GET https://graph.facebook.com/v25.0/{leadgen_id}
+   └── Retorna field_data completo do formulário
 
 2. Extrair Campos do Formulário
    └── Mapeia field_data: nome, email, telefone, perfil, volume, CNPJ, estado
+   └── Usa fuzzy matching para normalizar nomes de campo
 
 3. Normalizar Telefone
    └── Converte qualquer formato para 55DDDNNNNNNNNN
@@ -186,18 +193,36 @@ Este workflow é acionado automaticamente quando um lead preenche o formulário 
 
 ### 4.2 1ª Mensagem - Path 2 (Distribuidor)
 
+A mensagem do Path 2 é dinâmica e varia conforme 4 cenários:
+
+| Cenário | Condição | Justificativa na mensagem |
+|---------|----------|---------------------------|
+| A | Volume baixo + distribuidores encontrados | Menciona volume como motivo + lista distribuidores |
+| B | Volume baixo + sem distribuidores no estado | Menciona volume + informa que não há distribuidor cadastrado |
+| C | Fora do N/NE + distribuidores encontrados | Menciona cobertura regional como motivo + lista distribuidores |
+| D | Fora do N/NE + sem distribuidores no estado | Menciona cobertura regional + informa que não há distribuidor cadastrado |
+
+Exemplo (cenário A):
 ```
-Olá {nome}! Aqui é o João da ASX Iluminação.
+Olá {nome}! Aqui é o João da ASX Iluminação. 👋
 
-Vi que a {empresa} se cadastrou no nosso formulário.
-Para o perfil da sua empresa, o canal mais rápido para
-adquirir nossos produtos são nossos distribuidores parceiros.
+Vi que a {empresa} se cadastrou pelo nosso formulário para conhecer nossos produtos.
 
-Na sua região ({estado}), recomendo:
+Pelo volume mensal informado no cadastro ({volume_faixa}), o canal mais adequado neste momento
+é o atendimento pelos nossos distribuidores parceiros, que conseguem te atender com mais agilidade.
 
-• {distribuidor_1} - {cidade_1}/{estado_1}
-• {distribuidor_2} - {cidade_2}/{estado_2}
-• {distribuidor_3} - {cidade_3}/{estado_3}
+Na sua região, recomendo:
+
+1. *{distribuidor_1}* - {cidade_1}
+   Tel: {telefone_1}
+
+2. *{distribuidor_2}* - {cidade_2}
+   Tel: {telefone_2}
+
+3. *{distribuidor_3}* - {cidade_3}
+   Tel: {telefone_3}
+
+Você também pode consultar todos os nossos distribuidores em: asx.com.br/distribuidores
 
 Qualquer dúvida, estou por aqui!
 ```
@@ -205,11 +230,16 @@ Qualquer dúvida, estou por aqui!
 ### 4.3 1ª Mensagem - Path 3 (Qualificado)
 
 ```
-Olá {nome}! Aqui é o João da ASX Iluminação.
+Olá {nome}! Aqui é o João, consultor comercial da ASX Iluminação.
 
-Vi que a {empresa} se cadastrou para negociação direta.
-Tenho os dados do formulário aqui. Podemos conversar
-sobre as melhores condições para vocês?
+Vi que a {empresa} se cadastrou para negociação direta conosco. Que ótimo saber do seu interesse!
+
+Confirmei aqui seus dados do cadastro:
+• Perfil: {perfil}
+• Volume mensal: {volume_faixa}
+• Estado: {estado}
+
+Está tudo certo? Posso dar andamento ao seu atendimento?
 ```
 
 ---
@@ -234,7 +264,7 @@ Mensagem chega via WhatsApp
 Processar mídia (texto/áudio/imagem/documento)
     │
     ▼
-Agrupar mensagens (Redis - janela de 15s)
+Agrupar mensagens (Redis - janela de 10s)
     │
     ▼
 Identificar Lead (query por telefone)
@@ -244,7 +274,7 @@ Switch:
 ├── "already_qualified" → Notificar vendedor → FIM
 ├── "distributor_agent" → João Direcionador (Path 2) → Responder
 ├── "qualified_agent"   → João Consultor (Path 3) → Responder
-└── "unknown"           → Auto-reply estática → FIM
+└── "unknown"           → Ignorar (sem resposta) → FIM
 ```
 
 ### 5.2 Processamento de Mídia
@@ -253,18 +283,21 @@ Switch:
 |------|---------------|
 | **Texto** | Usado diretamente |
 | **Áudio** | Transcrito via OpenAI Whisper |
-| **Imagem** | Sinalizado como possível NF (has_image = true) |
+| **Imagem (sem legenda)** | Analisada via OpenAI Vision + sinalizada (has_image = true) |
+| **Imagem (com legenda)** | Legenda usada como texto + sinalizada (has_image = true) |
 | **Documento** | Sinalizado como possível NF (has_document = true) |
 
 ### 5.3 Batching de Mensagens (Redis)
 
-Quando o lead envia várias mensagens seguidas (ex: texto + áudio + foto), o sistema aguarda 15 segundos para agrupar tudo em uma única entrada antes de processar. Isso evita múltiplas respostas fragmentadas.
+Quando o lead envia várias mensagens seguidas (ex: texto + áudio + foto), o sistema aguarda 10 segundos para agrupar tudo em uma única entrada antes de processar. Isso evita múltiplas respostas fragmentadas.
+
+Cada mensagem é empacotada como JSON com `msgId`, `message`, `chatwootConversationId`, `chatwootInboxId`, `has_document`, `has_image`. A deduplicação usa `msgId` (não texto) para determinar qual execução processa o batch.
 
 ```
-Msg 1 → Redis PUSH → Wait 15s
-Msg 2 → Redis PUSH → (timer já rodando)
-Msg 3 → Redis PUSH → (timer já rodando)
-                       Timer expira → Redis GET ALL → Merge → Processar
+Msg 1 → Redis PUSH (JSON) → Wait 10s
+Msg 2 → Redis PUSH (JSON) → (timer já rodando)
+Msg 3 → Redis PUSH (JSON) → (timer já rodando)
+                              Timer expira → Redis GET ALL → Parse Redis Batch → IF Last Message → Merge → Processar
 ```
 
 ---
@@ -391,19 +424,21 @@ Leads qualificados (Path 3) que chegam ao handoff recebem uma pontuação:
 
 | Score | Classe | Prioridade | Significado |
 |-------|--------|------------|-------------|
-| 70-100 | Quente | Urgent | Alto potencial, atender imediatamente |
-| 40-69 | Morno | High | Bom potencial, priorizar |
-| 0-39 | Frio | Medium | Potencial moderado |
+| 80-100 | Quente | Urgent | Alto potencial, atender imediatamente |
+| 60-79 | Morno | High | Bom potencial, priorizar |
+| 0-59 | Frio | Medium | Potencial moderado |
 
 ### 7.2 Fatores que Influenciam o Score
 
-| Fator | Impacto Positivo | Impacto Negativo |
-|-------|------------------|------------------|
-| **Volume** | >= R$10k (+pontos) | Mínimo R$4k |
-| **Perfil** | Representante (+) | - |
-| **UF** | Estados estratégicos (+) | - |
-| **CNAE** | Autopeças/oficinas (+) | Outros CNAEs |
-| **Idade empresa** | > 5 anos (+) | < 1 ano |
+Base: 50 pontos. Máximo: 100.
+
+| Fator | Condição | Pontos |
+|-------|----------|--------|
+| **Volume** | >= R$8.000 | +20 |
+| **Volume** | >= R$5.000 (e < 8k) | +10 |
+| **Perfil** | Contém "revenda" ou "loja" | +10 |
+| **CNAE** | Códigos relevantes (4530, 4541, 4542, 4661, 4673, 4674, 4742, 4754) | +10 |
+| **Idade empresa** | > 5 anos | +5 |
 
 ---
 
@@ -415,9 +450,10 @@ Leads qualificados (Path 3) que chegam ao handoff recebem uma pontuação:
 
 **O que faz:**
 
-- Valida se o CNPJ existe na Receita Federal
+- Primeiro verifica cache na tabela `companies` (se já foi consultado antes, retorna direto)
+- Se não encontrar no cache, consulta a API CNPJA (`api.cnpja.com`)
 - Busca: razão social, nome fantasia, CNAE, cidade, estado
-- Salva os dados na tabela fb_leads
+- Salva/atualiza na tabela `companies` (cache) e retorna dados para o fluxo
 
 **Resultados:**
 
@@ -504,14 +540,15 @@ Parâmetros que o agente fornece (coletados na conversa + resultado do score_lea
 
 **Quando:** Para auditoria de decisões importantes
 
-**Eventos registrados:**
+**Tipos de eventos na tabela `events`:**
 
-- `score_calculated` - Score calculado
-- `lead_finalized` - Lead transferido
-- `desqualificado_politica` - Lead desqualificado por já comprar ASX
-- `distributor_recommended` - Distribuidores recomendados
+- `workflow_success` - Workflow executado com sucesso (WF06, WF07)
+- `handoff_complete` - Lead transferido para vendedor
+- `label_added` - Labels aplicadas no Chatwoot
+- `agent_log` - Eventos do agente IA (score calculado, desqualificação, etc.)
 - `invalid_phone` - Telefone inválido
-- `invalid_cnpj` - CNPJ inválido
+- `infra_error` - Erro em qualquer workflow (via WF05)
+- `health_check` - Resultado do monitoramento (via WF08)
 
 ---
 
@@ -615,15 +652,23 @@ Continue o atendimento no Chatwoot.
 
 Se alguém enviar mensagem para o número do SDR sem ter preenchido o formulário:
 
-### 11.1 Auto-reply Estática
+### 11.1 Ignorar Silenciosamente
 
-```
-Obrigado pelo contato! Este canal é exclusivo para
-atendimento via formulário. Para mais informações,
-acesse nosso site.
-```
+O sistema **NÃO** responde. A mensagem é recebida pelo WF07, classificada como `unknown`, e a execução encerra sem nenhuma ação. Nenhuma resposta é enviada.
 
-A IA **NÃO** processa a mensagem. É uma resposta fixa.
+---
+
+## 11B. Normalização de Telefone (WF07)
+
+O WhatsApp JID chega com 12 dígitos (55+DDD+8dígitos, sem o 9 móvel), enquanto a `fb_leads` armazena com 13 dígitos (55+DDD+9+8dígitos). O WF07 normaliza para 13 dígitos no node `Normalisa Payload` e o SQL do `Lookup Lead Path` faz match com OR em ambos os formatos (12 e 13 dígitos).
+
+## 11C. Integração Chatwoot ↔ Evolution API
+
+A sincronização de mensagens entre WhatsApp e Chatwoot é feita **automaticamente pela Evolution API** (configuração `enabled: true` com `mergeBrazilContacts: true` na integração Chatwoot). Não há nodes nos workflows para postar mensagens no Chatwoot — a Evolution API cuida disso.
+
+O WF06 enriquece o contato no Chatwoot com:
+- `custom_attributes` e `additional_attributes` (dados do lead)
+- Private note na conversa com resumo do lead (nome, empresa, CNPJ, perfil, volume, estado, path, motivo)
 
 ---
 
@@ -812,9 +857,7 @@ João: Recebi! Vou te passar para um especialista que vai
 ```
 Pessoa: Oi, quero comprar lâmpada pro meu carro
 
-João (auto-reply): Obrigado pelo contato! Este canal é exclusivo
-      para atendimento via formulário. Para mais informações,
-      acesse nosso site.
+[Nenhuma resposta é enviada. O sistema ignora silenciosamente.]
 ```
 
 ---
@@ -826,17 +869,16 @@ João (auto-reply): Obrigado pelo contato! Este canal é exclusivo
 | # | Workflow | Tipo | Função |
 |---|----------|------|--------|
 | 02 | 02-Tool-Label | Callable | Aplicar labels no Chatwoot |
-| 02A | 02A-Company-Enrich | Callable | Validar CNPJ na Receita Federal |
-| 02B | 02B-Score-Lead | Callable | Calcular score do lead |
-| 02C | 02C-Agent-Log | Callable | Registrar eventos |
-| **02D** | **02D-Find-Distributors** | Callable | Buscar distribuidores por estado |
-| **03** | **03-Finalize-Handoff** | Callable | Transferir lead para vendedor (modificado) |
-| 04 | 04-Chatwoot-Message-Logger | Webhook | Registrar mensagens no Chatwoot |
-| 05 | 05-Error-Logger | Error Handler | Capturar e registrar erros |
-| **06** | **06-FB-Leads-Outbound** | Facebook Trigger | Processar formulário → enviar 1ª msg |
-| **07** | **07-FB-Leads-Inbound** | Webhook | Receber respostas → IA responde |
-
-**Negrito** = workflows novos ou modificados
+| 02A | 02A-Company-Enrich | Callable | Validar CNPJ na Receita Federal (com cache em `companies`) |
+| 02B | 02B-Score-Lead | Callable | Calcular score do lead (0-100) |
+| 02C | 02C-Agent-Log | Callable | Registrar eventos na tabela `events` |
+| 02D | 02D-Find-Distributors | Callable | Buscar distribuidores por estado |
+| 03 | 03-Finalize-Handoff | Callable | Transferir lead para vendedor (round-robin) |
+| 04 | 04-Chatwoot-Message-Logger | Webhook | Salvar mensagens de vendedores na tabela `messages` |
+| 05 | 05-Error-Logger | Error Handler | Capturar e registrar erros na tabela `events` |
+| 06 | 06-FB-Leads-Outbound-Webhook | Webhook | Processar formulário Facebook → classificar → enviar 1ª msg |
+| 07 | 07-FB-Leads-Inbound | Webhook | Receber respostas → batching Redis → agente IA responde |
+| 08 | 08-Health-Check | Schedule (5 min) | Monitoramento operacional (serviços, leads, mensagens, workflows) |
 
 ### 14.2 Dependências
 
@@ -851,6 +893,10 @@ João (auto-reply): Obrigado pelo contato! Este canal é exclusivo
              ──usa──→ 02C (logs)
              ──usa──→ 02D (distribuidores - Path 2)
              ──usa──→ 03  (handoff - Path 3)
+
+04-Chatwoot  ← Webhook Chatwoot (message_created)
+05-Error     ← Error trigger (qualquer workflow)
+08-Health    ← Schedule (5 min) → Ping serviços + snapshots operacionais
 ```
 
 **IMPORTANTE:** Os workflows callable (02, 02A, 02B, 02C, 02D, 03) devem permanecer ATIVOS. Não podem ser desativados.
@@ -859,14 +905,21 @@ João (auto-reply): Obrigado pelo contato! Este canal é exclusivo
 
 ## 15. Banco de Dados
 
-### 15.1 Tabelas do Novo Fluxo
+### 15.1 Tabelas
 
 | Tabela | Propósito |
 |--------|-----------|
 | `fb_leads` | Registra cada submissão do formulário Facebook |
-| `distributors` | Lista de distribuidores parceiros (498 registros) |
+| `ia_messages` | Histórico de mensagens da IA (phone, direction, content, session_id) |
+| `messages` | Mensagens do lado vendedor (via webhook Chatwoot → WF04) |
+| `leads` | Leads qualificados (score, class, priority, source, ja_compra_asx_regiao, etc.) |
+| `contacts` | Registro de contatos (phone, name) — upsert no handoff |
+| `companies` | Cache de dados CNPJ (razão social, nome fantasia, CNAE, cidade, estado) |
+| `agents` | Vendedores (nome, phone, team_id) — usado no round-robin |
+| `assignments` | Vínculo lead-vendedor |
+| `distributors` | Distribuidores parceiros (~83 ativos) |
 | `distributor_recommendations` | Histórico de recomendações feitas |
-| `leads` (alterada) | Novos campos: source, fb_lead_id, ja_compra_asx_regiao, etc. |
+| `events` | Log universal de eventos do sistema |
 
 ### 15.2 Status do fb_lead
 
@@ -927,7 +980,7 @@ O sistema registra dados para acompanhamento:
 | **Distribuidor Parceiro** | Empresa que revende produtos ASX |
 | **Inbox** | Caixa de entrada no Chatwoot |
 | **Callable** | Workflow auxiliar chamado por outros workflows |
-| **Batching** | Agrupamento de mensagens em janela de 15 segundos |
+| **Batching** | Agrupamento de mensagens em janela de 10 segundos |
 | **B2B** | Business to Business - venda para empresas |
 | **NF** | Nota Fiscal |
 | **N/NE** | Norte e Nordeste do Brasil |
